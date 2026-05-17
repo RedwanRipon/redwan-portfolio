@@ -70,15 +70,29 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               href="#portfolio"
-              className="rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-ink transition hover:bg-gold-dark"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-neutral-900 shadow-[0_4px_18px_rgba(240,187,98,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-[0_10px_28px_rgba(240,187,98,0.45)] focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
             >
-              View Work
+              <span className="relative z-10">View Work</span>
             </Link>
+
             <Link
               href="#contact"
-              className="rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition hover:border-gold hover:text-gold"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:text-neutral-900 hover:shadow-[0_10px_28px_rgba(240,187,98,0.4)] focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:text-neutral-900 focus-visible:shadow-[0_10px_28px_rgba(240,187,98,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
             >
-              Get in touch
+              <span className="relative z-10">Get in touch</span>
+              {/* Gold fill slides in from the left on hover / focus */}
+              <span
+                aria-hidden
+                className="absolute inset-0 origin-left scale-x-0 bg-gold transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
+              />
+              {/* Soft inner glow that fades in alongside the fill */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                style={{
+                  boxShadow: 'inset 0 0 18px rgba(255,255,255,0.25)',
+                }}
+              />
             </Link>
           </div>
           <div className="relative mt-5 inline-block">
