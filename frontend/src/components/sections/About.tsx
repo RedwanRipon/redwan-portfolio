@@ -40,7 +40,7 @@ export function About() {
             <h3 className="mb-4 font-display text-3xl font-bold text-white">
               Hi, I&apos;m Md Redwan Hossain.
             </h3>
-            <p className="mb-4 text-base font-medium text-white/90">
+            <p className="mb-4 text-base font-semibold text-white">
               Master&apos;s graduate and AI/ML researcher focused on building agentic systems —
               the kind that listen, reason, and act.
             </p>
