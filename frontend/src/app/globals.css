@@ -2,14 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
-}
-
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* offset for sticky navbar when jumping to anchors */
 }
 
 body {
-  @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  @apply bg-ink text-muted antialiased font-sans;
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display text-white;
+}
+
+/* Selection */
+::selection {
+  background: #f0bb62;
+  color: #191A1C;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #121315;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2d31;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f0bb62;
+}
+
+/* Reusable section padding (matches Janemon's .section-padding) */
+@layer components {
+  .section-padding {
+    @apply py-20 md:py-24;
+  }
 }
