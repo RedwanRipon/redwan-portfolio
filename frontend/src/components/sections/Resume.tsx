@@ -10,31 +10,37 @@ interface TimelineItem {
 
 const EDUCATION: TimelineItem[] = [
   {
-    title: 'M.Sc. Data Science',
-    year: '2024 — Present',
-    org: 'Germany',
-    desc: 'Focus on AI / Machine Learning. Thesis on voice-driven agents in progress.',
+    title: 'M.Sc. in Data Science (Major: Machine Learning & AI)',
+    year: '2026',
+    org: 'University of Erlangen-Nuremberg, Germany',
+    desc: 'Coursework: Pattern Recognition, Deep Learning, ML for Time Series, High-dimensional Statistics, Anomaly Detection, Business Intelligence.',
   },
   {
-    title: 'B.Sc. in Computer Science',
+    title: 'B.Sc. in Computer Science & Engineering',
     year: '2020',
-    org: 'Undergraduate',
-    desc: 'Foundations in algorithms, systems, and software engineering.',
+    org: 'Southeast University, Dhaka, Bangladesh',
+    desc: 'Coursework: Algorithms, OOP, Data Mining, Linear Algebra, Artificial Intelligence, Computer Graphics, Advanced Networking.',
   },
 ];
 
 const EXPERIENCE: TimelineItem[] = [
   {
-    title: 'AI Research / Thesis Work',
-    year: '2025 — Present',
-    org: 'University',
-    desc: 'Building agentic systems with LangChain, RAG, and streaming speech interfaces.',
+    title: 'Master Thesis Student',
+    year: '2025/11 — 2026/05',
+    org: 'Department Mathematik, Erlangen',
+    desc: 'Integrated charging-aware mixed-fleet MIP for joint scheduling of electric and diesel buses — combining timetable, vehicle scheduling, fleet assignment, and charging in one model. Stack: Python, Pyomo, Gurobi, py5.',
   },
   {
-    title: 'Full-Stack Developer (Freelance)',
-    year: '2022 — 2024',
-    org: 'Selected clients',
-    desc: 'Shipped Next.js + Python apps; led prototyping for AI features.',
+    title: 'Web Developer',
+    year: '2020/03 — 2021/12',
+    org: 'Aarashi Online Store, Dhaka',
+    desc: 'Built scalable REST APIs, designed the database schema, and shipped UI integrations. Stack: JS frameworks, SQL Server, Postman, cloud services.',
+  },
+  {
+    title: 'Web Developer Trainee',
+    year: '2019/12 — 2020/02',
+    org: 'Unlock It Limited, Dhaka',
+    desc: 'Assisted in REST API development, database design, and RESTful UI integration. Stack: JS, CSS, Laravel, PHP, MySQL.',
   },
 ];
 
