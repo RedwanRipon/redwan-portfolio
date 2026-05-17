@@ -7,7 +7,7 @@ import { SectionTitle } from '@/components/ui/SectionTitle';
 const ADDRESS = [
   { icon: MapPin, title: 'Location', value: 'Germany' },
   { icon: Phone, title: 'Phone', value: 'Available on request' },
-  { icon: Mail, title: 'Email', value: 'ripon201318@gmail.com' },
+  { icon: Mail, title: 'Email', value: 'redwanhossain.seu@gmail.com' },
   { icon: Clock, title: 'Working hours', value: 'Mon–Fri · 9:00–18:00 CET' },
 ];
 

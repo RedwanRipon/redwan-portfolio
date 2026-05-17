@@ -5,7 +5,7 @@ const SOCIALS = [
   { href: 'https://github.com/RedwanRipon', label: 'GitHub', icon: Github },
   { href: '#', label: 'LinkedIn', icon: Linkedin },
   { href: '#', label: 'Twitter', icon: Twitter },
-  { href: 'mailto:ripon201318@gmail.com', label: 'Email', icon: Mail },
+  { href: 'mailto:redwanhossain.seu@gmail.com', label: 'Email', icon: Mail },
 ];
 
 export function Footer() {

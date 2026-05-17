@@ -83,7 +83,7 @@ export function Hero() {
           {/* Basic info grid (Janemon-style) */}
           <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
             {[
-              { k: 'Email', v: 'ripon201318@gmail.com' },
+              { k: 'Email', v: 'redwanhossain.seu@gmail.com' },
               { k: 'Location', v: 'Germany' },
               { k: 'Field', v: 'AI / ML' },
               { k: 'Status', v: 'Open to work' },
