@@ -43,12 +43,12 @@ const SERVICES = [
 
 export function Services() {
   return (
-    <section id="service" className="section-padding bg-ink-deep">
+    <section id="expertise" className="section-padding bg-ink-deep">
       <div className="container">
         <SectionTitle
-          eyebrow="What I'm doing"
-          title="Services"
-          subtitle="A snapshot of the work I take on."
+          eyebrow="What I focus on"
+          title="Expertise"
+          subtitle="Areas I research, build in, and keep learning."
         />
 
         <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
