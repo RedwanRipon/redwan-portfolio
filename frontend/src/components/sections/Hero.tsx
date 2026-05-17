@@ -78,18 +78,35 @@ export function Hero() {
               Get in touch
             </Link>
           </div>
-          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/5 px-4 py-2 text-xs text-muted/90 backdrop-blur">
-            Or hit the{' '}
-            <span className="font-semibold motion-safe:animate-violet-glow">
-              violet orb
-            </span>{' '}
-            at the bottom-right to talk instead of read
-            <CornerDownRight
-              size={14}
-              className="text-violet-300 motion-safe:animate-nudge-dr"
+          <div className="relative mt-5 inline-block">
+            {/* Traveling-light highlight that sweeps around the pill */}
+            <span
               aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-full opacity-70 blur-[2px] motion-safe:animate-border-sweep"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent 0%, transparent 35%, rgba(196,181,253,0.55) 50%, transparent 65%, transparent 100%)',
+                backgroundSize: '200% 100%',
+                WebkitMask:
+                  'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+                padding: '1px',
+              }}
             />
-          </p>
+            <p className="relative inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/5 px-4 py-2 text-xs text-muted/90 backdrop-blur motion-safe:animate-border-pulse">
+              Or hit the{' '}
+              <span className="font-semibold motion-safe:animate-violet-glow">
+                violet orb
+              </span>{' '}
+              at the bottom-right to talk instead of read
+              <CornerDownRight
+                size={14}
+                className="text-violet-300 motion-safe:animate-nudge-dr"
+                aria-hidden
+              />
+            </p>
+          </div>
 
           {/* Basic info grid (Janemon-style) */}
           <dl className="mt-14 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">

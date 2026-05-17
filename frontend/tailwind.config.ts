@@ -53,6 +53,8 @@ const config: Config = {
         'callout-in': 'calloutIn 500ms ease-out both',
         'nudge-dr': 'nudgeDownRight 1.6s ease-in-out infinite',
         'violet-glow': 'violetGlow 2.4s ease-in-out infinite',
+        'border-pulse': 'borderPulse 2.8s ease-in-out infinite',
+        'border-sweep': 'borderSweep 4s linear infinite',
       },
       keyframes: {
         fadeInUp: {
@@ -93,6 +95,22 @@ const config: Config = {
             textShadow: '0 0 12px rgba(196,181,253,0.6), 0 0 20px rgba(139,92,246,0.4)',
             color: '#ddd6fe',
           },
+        },
+        borderPulse: {
+          '0%, 100%': {
+            borderColor: 'rgba(196,181,253,0.18)',
+            boxShadow:
+              '0 0 0 0 rgba(139,92,246,0), inset 0 0 0 0 rgba(196,181,253,0)',
+          },
+          '50%': {
+            borderColor: 'rgba(196,181,253,0.6)',
+            boxShadow:
+              '0 0 18px 1px rgba(139,92,246,0.35), inset 0 0 10px rgba(196,181,253,0.15)',
+          },
+        },
+        borderSweep: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '100%': { backgroundPosition: '200% 50%' },
         },
       },
     },
