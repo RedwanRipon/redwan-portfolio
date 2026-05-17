@@ -113,7 +113,7 @@ export function Hero() {
             />
             <p className="relative inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/5 px-4 py-2 text-xs text-muted/90 backdrop-blur motion-safe:animate-border-pulse">
               Or hit the{' '}
-              <span className="font-semibold motion-safe:animate-violet-glow">
+              <span className="font-semibold text-violet-700 motion-safe:animate-violet-glow dark:text-violet-200">
                 violet orb
               </span>{' '}
               at the bottom-right to talk instead of read

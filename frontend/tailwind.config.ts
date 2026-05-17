@@ -98,14 +98,15 @@ const config: Config = {
           '0%, 100%': { transform: 'translate(0, 0)', opacity: '0.6' },
           '50%': { transform: 'translate(5px, 5px)', opacity: '1' },
         },
+        // Only the halo (text-shadow) animates now. Text color is set
+        // statically per theme on the element so the words never
+        // disappear on a white background.
         violetGlow: {
           '0%, 100%': {
             textShadow: '0 0 0 rgba(196,181,253,0)',
-            color: '#c4b5fd',
           },
           '50%': {
             textShadow: '0 0 12px rgba(196,181,253,0.6), 0 0 20px rgba(139,92,246,0.4)',
-            color: '#ddd6fe',
           },
         },
         borderPulse: {
