@@ -41,7 +41,7 @@ export function About() {
               Hi, I&apos;m Md Redwan Hossain.
             </h3>
             <p className="mb-4 text-base font-medium text-white/90">
-              Master&apos;s student and AI/ML researcher focused on building agentic systems —
+              Master&apos;s graduate and AI/ML researcher focused on building agentic systems —
               the kind that listen, reason, and act.
             </p>
             <p className="mb-8 text-muted">
