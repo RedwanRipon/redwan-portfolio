@@ -23,17 +23,22 @@ const config: Config = {
     },
     extend: {
       colors: {
+        // `ink` and `muted` are driven by CSS variables defined in
+        // globals.css so the entire palette can flip between dark and
+        // light themes via the `.dark` class on <html>. Using the
+        // <alpha-value> token preserves Tailwind opacity modifiers
+        // (e.g. bg-ink-card/80).
         ink: {
-          DEFAULT: '#191A1C',
-          card: '#1b1e22',
-          deep: '#121315',
+          DEFAULT: 'rgb(var(--ink-default) / <alpha-value>)',
+          card: 'rgb(var(--ink-card) / <alpha-value>)',
+          deep: 'rgb(var(--ink-deep) / <alpha-value>)',
         },
         gold: {
           DEFAULT: '#f0bb62',
           dark: '#d9a44e',
         },
         muted: {
-          DEFAULT: '#bdbec1',
+          DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
         },
       },
       fontFamily: {

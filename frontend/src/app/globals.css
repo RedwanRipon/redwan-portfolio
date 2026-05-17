@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ----- Theme tokens ----- */
+/* Default (light) values. Flipped via the `.dark` class on <html>. */
+:root {
+  --ink-default: 248 250 252; /* slate-50  */
+  --ink-card:    241 245 249; /* slate-100 */
+  --ink-deep:    255 255 255; /* white     */
+  --muted:        71 85 105;  /* slate-600 */
+  --fg:          15 23 42;    /* slate-900 — replaces "white" in light */
+}
+
+html.dark {
+  --ink-default: 25 26 28;
+  --ink-card:    27 30 34;
+  --ink-deep:    18 19 21;
+  --muted:       189 190 193;
+  --fg:          255 255 255;
+}
+
+/* Light-mode overrides for the few hardcoded white text/border/bg
+   utilities so the dark-tuned components stay legible on a light bg.
+   Localized here so we don't have to add `dark:` to every component. */
+html:not(.dark) .text-white          { color: rgb(var(--fg)); }
+html:not(.dark) [class*="border-white/"] { border-color: rgba(15, 23, 42, 0.15); }
+html:not(.dark) [class*="bg-white/"]     { background-color: rgba(15, 23, 42, 0.05); }
+html:not(.dark) .placeholder\:text-muted\/70::placeholder,
+html:not(.dark) ::placeholder            { color: rgb(var(--muted)); }
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px; /* offset for sticky navbar when jumping to anchors */
