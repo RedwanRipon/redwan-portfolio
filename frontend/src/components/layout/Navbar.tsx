@@ -94,7 +94,7 @@ export function Navbar() {
               size={13}
               className="transition-transform group-hover:translate-y-0.5"
             />
-            CV
+            Resume
           </a>
         </div>
 
@@ -132,7 +132,7 @@ export function Navbar() {
                 className="inline-flex items-center gap-2 rounded-md bg-gold px-4 py-2 font-display text-sm font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition hover:bg-gold-dark dark:!text-neutral-900"
               >
                 <Download size={14} />
-                Download CV
+                Download Resume
               </a>
             </li>
           </ul>
