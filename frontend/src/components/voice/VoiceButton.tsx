@@ -88,34 +88,52 @@ export function VoiceButton() {
         </div>
       )}
 
-      {/* Label pill (hidden on tiny phones) */}
-      <button
-        type="button"
-        onClick={toggle}
-        className={cn(
-          'group relative hidden overflow-hidden rounded-full border bg-ink-card/80 px-5 py-3 font-display text-sm font-medium backdrop-blur transition sm:block',
-          active
-            ? 'border-violet-400/60 text-violet-200'
-            : 'border-white/15 text-white hover:border-violet-400/60 hover:text-violet-200',
-        )}
-      >
-        <span className="relative z-10">
-          {active ? 'Listening…' : 'Ask Redwan AI'}
-        </span>
-        {/* Shimmer sweep (only when idle) */}
-        {!active && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 motion-safe:animate-shimmer"
-            style={{
-              backgroundImage:
-                'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)',
-              backgroundSize: '200% 100%',
-              backgroundRepeat: 'no-repeat',
-            }}
-          />
-        )}
-      </button>
+      {/* Label pill (hidden on tiny phones) — wrapped so the border-sweep
+          ring can sit on top of the button outline without being clipped. */}
+      <div className="relative hidden sm:block">
+        {/* Traveling light streak around the border */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-full opacity-70 blur-[2px] motion-safe:animate-border-sweep"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent 0%, transparent 35%, rgba(196,181,253,0.55) 50%, transparent 65%, transparent 100%)',
+            backgroundSize: '200% 100%',
+            WebkitMask:
+              'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            padding: '1px',
+          }}
+        />
+        <button
+          type="button"
+          onClick={toggle}
+          className={cn(
+            'group relative overflow-hidden rounded-full border bg-ink-card/80 px-5 py-3 font-display text-sm font-medium backdrop-blur transition motion-safe:animate-border-pulse',
+            active
+              ? 'border-violet-400/60 text-violet-200'
+              : 'border-white/15 text-white hover:border-violet-400/60 hover:text-violet-200',
+          )}
+        >
+          <span className="relative z-10">
+            {active ? 'Listening…' : 'Ask Redwan AI'}
+          </span>
+          {/* Shimmer sweep across the text (only when idle) */}
+          {!active && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 motion-safe:animate-shimmer"
+              style={{
+                backgroundImage:
+                  'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)',
+                backgroundSize: '200% 100%',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          )}
+        </button>
+      </div>
 
       {/* Orb button with gentle float wrapper */}
       <div className="motion-safe:animate-orb-float">
