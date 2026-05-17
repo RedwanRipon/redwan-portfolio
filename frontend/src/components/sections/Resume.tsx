@@ -9,7 +9,7 @@ interface TimelineItem {
 
 const EDUCATION: TimelineItem[] = [
   {
-    title: 'M.Sc. — Current Programme',
+    title: 'M.Sc. Data Science',
     year: '2024 — Present',
     org: 'Germany',
     desc: 'Focus on AI / Machine Learning. Thesis on voice-driven agents in progress.',

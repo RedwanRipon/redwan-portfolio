@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Mic } from 'lucide-react';
 
-const ROLES = ['AI/ML Researcher', 'Full-Stack Developer', 'Master’s Student'];
+const ROLES = ['AI/ML Researcher', 'Full-Stack Developer', 'M.Sc. Data Science'];
 
 /** Simple typewriter that cycles through the ROLES array. */
 function useTypewriter(words: string[], typeMs = 90, holdMs = 1400) {
