@@ -98,14 +98,18 @@ const config: Config = {
           '0%, 100%': { transform: 'translate(0, 0)', opacity: '0.6' },
           '50%': { transform: 'translate(5px, 5px)', opacity: '1' },
         },
+        // Colors reference --violet-glow-1 / --violet-glow-2 so the
+        // pulse stays visible in both themes (dark violets on white,
+        // light violets on dark).
         violetGlow: {
           '0%, 100%': {
-            textShadow: '0 0 0 rgba(196,181,253,0)',
-            color: '#c4b5fd',
+            textShadow: '0 0 0 rgb(var(--violet-glow-1) / 0)',
+            color: 'rgb(var(--violet-glow-1))',
           },
           '50%': {
-            textShadow: '0 0 12px rgba(196,181,253,0.6), 0 0 20px rgba(139,92,246,0.4)',
-            color: '#ddd6fe',
+            textShadow:
+              '0 0 12px rgb(var(--violet-glow-1) / 0.6), 0 0 20px rgb(var(--violet-glow-2) / 0.4)',
+            color: 'rgb(var(--violet-glow-2))',
           },
         },
         borderPulse: {

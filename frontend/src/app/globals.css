@@ -13,6 +13,10 @@
   /* Brand accent: violet on white for contrast/cohesion with voice orb. */
   --gold:        124 58 237;  /* violet-600 */
   --gold-dark:   109 40 217;  /* violet-700 */
+  /* "violet orb" pulsing text in the Hero hint. Dark violets in light
+     mode so the animated text stays legible on white. */
+  --violet-glow-1: 109 40 217; /* violet-700 */
+  --violet-glow-2: 124 58 237; /* violet-600 */
 }
 
 html.dark {
@@ -24,6 +28,9 @@ html.dark {
   /* Brand accent reverts to warm gold on dark. */
   --gold:        240 187 98;
   --gold-dark:   217 164 78;
+  /* Original light violets — readable on the dark ink background. */
+  --violet-glow-1: 196 181 253; /* violet-300 */
+  --violet-glow-2: 221 214 254; /* violet-200 */
 }
 
 /* Light-mode overrides for the few hardcoded white text/border/bg
