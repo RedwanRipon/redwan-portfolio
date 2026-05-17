@@ -46,11 +46,37 @@ const config: Config = {
       animation: {
         'fade-in-up': 'fadeInUp 700ms ease-out both',
         'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'orb-float': 'orbFloat 5s ease-in-out infinite',
+        'orb-glow': 'orbGlow 3s ease-in-out infinite',
+        shimmer: 'shimmer 3.5s linear infinite',
+        'pop-in': 'popIn 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'callout-in': 'calloutIn 500ms ease-out both',
       },
       keyframes: {
         fadeInUp: {
           '0%': { opacity: '0', transform: 'translateY(24px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        orbFloat: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        orbGlow: {
+          '0%, 100%': { opacity: '0.5', transform: 'scale(1)' },
+          '50%': { opacity: '0.9', transform: 'scale(1.18)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        popIn: {
+          '0%': { opacity: '0', transform: 'scale(0.3) translateY(40px)' },
+          '60%': { opacity: '1', transform: 'scale(1.08) translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        calloutIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px) scale(0.9)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
     },
