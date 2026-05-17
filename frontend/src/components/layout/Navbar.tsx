@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Download, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
@@ -62,26 +62,41 @@ export function Navbar() {
           Redwan<span className="text-gold">.</span>
         </Link>
 
-        {/* Desktop */}
-        <ul className="hidden items-center gap-8 lg:flex">
-          {NAV_LINKS.map((link) => {
-            const id = link.href.split('#')[1];
-            const isActive = active === id;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={cn(
-                    'font-display text-sm font-medium tracking-wide transition-colors',
-                    isActive ? 'text-gold' : 'text-white hover:text-gold',
-                  )}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {/* Desktop: nav links + CV pill grouped on the right */}
+        <div className="hidden items-center gap-7 lg:flex">
+          <ul className="flex items-center gap-7">
+            {NAV_LINKS.map((link) => {
+              const id = link.href.split('#')[1];
+              const isActive = active === id;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      'font-display text-sm font-medium tracking-wide transition-colors',
+                      isActive ? 'text-gold' : 'text-white hover:text-gold',
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* CV download — small gold pill */}
+          <a
+            href="/documents/redwan-hossain-cv.pdf"
+            download
+            className="group inline-flex items-center gap-1.5 rounded-full bg-gold px-4 py-1.5 font-display text-xs font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-gold-lg active:scale-95 dark:!text-neutral-900"
+          >
+            <Download
+              size={13}
+              className="transition-transform group-hover:translate-y-0.5"
+            />
+            CV
+          </a>
+        </div>
 
         {/* Mobile toggle */}
         <button
@@ -109,6 +124,17 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
+            <li className="mt-2">
+              <a
+                href="/documents/redwan-hossain-cv.pdf"
+                download
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center gap-2 rounded-md bg-gold px-4 py-2 font-display text-sm font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition hover:bg-gold-dark dark:!text-neutral-900"
+              >
+                <Download size={14} />
+                Download CV
+              </a>
+            </li>
           </ul>
         </div>
       )}
