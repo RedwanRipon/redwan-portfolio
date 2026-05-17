@@ -55,7 +55,7 @@ export function VoiceButton() {
     <div
       role="region"
       aria-label="Voice assistant"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-3 motion-safe:animate-pop-in"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 motion-safe:animate-pop-in"
     >
       {/* First-visit callout bubble */}
       {showCallout && !active && (
@@ -110,7 +110,7 @@ export function VoiceButton() {
           type="button"
           onClick={toggle}
           className={cn(
-            'group relative overflow-hidden rounded-full border bg-ink-card/80 px-5 py-3 font-display text-sm font-medium backdrop-blur transition motion-safe:animate-border-pulse',
+            'group relative overflow-hidden rounded-full border bg-ink-card/80 px-3.5 py-1.5 font-display text-xs font-medium backdrop-blur transition motion-safe:animate-border-pulse',
             active
               ? 'border-violet-400/60 text-violet-700 dark:text-violet-200'
               : 'border-white/15 text-white hover:border-violet-400/60 hover:text-violet-700 dark:hover:text-violet-200',
@@ -141,7 +141,7 @@ export function VoiceButton() {
           type="button"
           onClick={toggle}
           aria-label={active ? 'Stop voice agent' : 'Start voice agent'}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-400/60 focus:ring-offset-2 focus:ring-offset-ink"
+          className="group relative flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-400/60 focus:ring-offset-2 focus:ring-offset-ink"
         >
           {/* Idle breathing glow (slow pulse when not recording) */}
           {!active && (
@@ -183,7 +183,7 @@ export function VoiceButton() {
               Use an arbitrary value for white so the html:not(.dark)
               .text-white override doesn't hijack it in light mode. */}
           <Sparkles
-            size={22}
+            size={18}
             strokeWidth={1.7}
             className="relative z-10 text-[#fff] drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] dark:text-gold"
           />
