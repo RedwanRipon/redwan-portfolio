@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CornerDownRight } from 'lucide-react';
+import { NeuralNetworkBackground } from '@/components/ui/NeuralNetworkBackground';
 
 const ROLES = ['AI/ML Researcher', 'Full-Stack Developer', 'M.Sc. Data Science'];
 
@@ -49,6 +50,8 @@ export function Hero() {
         <div className="absolute -top-32 left-1/3 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-gold/5 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(240,187,98,0.08),transparent_60%)]" />
+        {/* AI/ML neural-network animation (sits above the orbs, below content) */}
+        <NeuralNetworkBackground />
       </div>
 
       <div className="container">
