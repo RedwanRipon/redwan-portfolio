@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CornerDownRight } from 'lucide-react';
 
 const ROLES = ['AI/ML Researcher', 'Full-Stack Developer', 'M.Sc. Data Science'];
 
@@ -77,8 +78,17 @@ export function Hero() {
               Get in touch
             </Link>
           </div>
-          <p className="mt-4 text-xs text-muted/80">
-            Or hit the violet orb at the bottom-right to talk instead of read.
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/5 px-4 py-2 text-xs text-muted/90 backdrop-blur">
+            Or hit the{' '}
+            <span className="font-semibold motion-safe:animate-violet-glow">
+              violet orb
+            </span>{' '}
+            at the bottom-right to talk instead of read
+            <CornerDownRight
+              size={14}
+              className="text-violet-300 motion-safe:animate-nudge-dr"
+              aria-hidden
+            />
           </p>
 
           {/* Basic info grid (Janemon-style) */}
