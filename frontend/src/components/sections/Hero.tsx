@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Mic } from 'lucide-react';
 
 const ROLES = ['AI/ML Researcher', 'Full-Stack Developer', 'M.Sc. Data Science'];
 
@@ -71,14 +70,16 @@ export function Hero() {
             >
               View Work
             </Link>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition hover:border-gold hover:text-gold"
+            <Link
+              href="#contact"
+              className="rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition hover:border-gold hover:text-gold"
             >
-              <Mic size={16} />
-              Talk to me
-            </button>
+              Get in touch
+            </Link>
           </div>
+          <p className="mt-4 text-xs text-muted/80">
+            Or hit the violet orb at the bottom-right to talk instead of read.
+          </p>
 
           {/* Basic info grid (Janemon-style) */}
           <dl className="mt-14 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
