@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 
 const SKILLS = [
@@ -14,13 +15,22 @@ export function About() {
         <SectionTitle eyebrow="Profile" title="About Me" subtitle="A short introduction." />
 
         <div className="grid items-start gap-12 lg:grid-cols-2">
-          {/* Portrait placeholder — drop a real photo at /public/images/profile.jpg */}
-          <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-ink-card">
-            <div className="absolute inset-0 bg-gradient-to-br from-gold/20 via-transparent to-transparent" />
-            <div className="flex h-full w-full items-center justify-center font-display text-7xl font-bold text-white/10">
-              MRH
+          {/* Portrait — file lives at /public/images/profile.jpg */}
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-ink-card">
+              <Image
+                src="/images/profile.jpg"
+                alt="Md Redwan Hossain portrait"
+                fill
+                priority
+                sizes="(max-width: 1024px) 80vw, 420px"
+                className="object-cover"
+              />
+              {/* Subtle gold wash on top */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gold/15 via-transparent to-transparent" />
             </div>
-            <div className="absolute -inset-1 -z-10 rounded-2xl bg-gold/20 blur-2xl" />
+            {/* Glow behind the card */}
+            <div className="absolute -inset-2 -z-10 rounded-2xl bg-gold/20 blur-2xl" />
           </div>
 
           <div>
