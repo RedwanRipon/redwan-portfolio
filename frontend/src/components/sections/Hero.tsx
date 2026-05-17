@@ -49,7 +49,7 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-32 left-1/3 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-gold/5 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(240,187,98,0.08),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgb(var(--gold)/0.08),transparent_60%)]" />
         {/* AI/ML neural-network animation (sits above the orbs, below content) */}
         <NeuralNetworkBackground />
       </div>
@@ -70,14 +70,14 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               href="#portfolio"
-              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-neutral-900 shadow-[0_4px_18px_rgba(240,187,98,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-[0_10px_28px_rgba(240,187,98,0.45)] focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-neutral-900 shadow-gold-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-gold-lg focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
             >
               <span className="relative z-10">View Work</span>
             </Link>
 
             <Link
               href="#contact"
-              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:text-neutral-900 hover:shadow-[0_10px_28px_rgba(240,187,98,0.4)] focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:text-neutral-900 focus-visible:shadow-[0_10px_28px_rgba(240,187,98,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:text-neutral-900 hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:text-neutral-900 focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
             >
               <span className="relative z-10">Get in touch</span>
               {/* Gold fill slides in from the left on hover / focus */}

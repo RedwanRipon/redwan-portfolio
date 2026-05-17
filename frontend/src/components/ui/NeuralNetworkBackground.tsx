@@ -79,8 +79,20 @@ export function NeuralNetworkBackground() {
     const CONNECT_DIST = 140;
     const CONNECT_DIST_SQ = CONNECT_DIST * CONNECT_DIST;
 
+    // The node accent color follows the --gold CSS variable so the
+    // network re-tints itself when the user toggles the theme. We
+    // re-read it each frame — a single getComputedStyle call is cheap.
+    const readAccent = () => {
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue('--gold')
+        .trim();
+      // raw is "R G B" (space-separated). Convert to "R,G,B" for rgba().
+      return raw.split(/\s+/).join(',') || '240,187,98';
+    };
+
     // ---------- drawing ----------
     const draw = () => {
+      const accent = readAccent();
       ctx.clearRect(0, 0, width, height);
 
       // edges
@@ -132,14 +144,14 @@ export function NeuralNetworkBackground() {
       for (const n of nodes) {
         // gentle outer glow
         const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 4);
-        g.addColorStop(0, 'rgba(240,187,98,0.5)');
-        g.addColorStop(1, 'rgba(240,187,98,0)');
+        g.addColorStop(0, `rgba(${accent},0.5)`);
+        g.addColorStop(1, `rgba(${accent},0)`);
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r * 4, 0, Math.PI * 2);
         ctx.fill();
         // bright core
-        ctx.fillStyle = 'rgba(240,187,98,0.95)';
+        ctx.fillStyle = `rgba(${accent},0.95)`;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
         ctx.fill();

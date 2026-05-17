@@ -34,8 +34,8 @@ const config: Config = {
           deep: 'rgb(var(--ink-deep) / <alpha-value>)',
         },
         gold: {
-          DEFAULT: '#f0bb62',
-          dark: '#d9a44e',
+          DEFAULT: 'rgb(var(--gold) / <alpha-value>)',
+          dark: 'rgb(var(--gold-dark) / <alpha-value>)',
         },
         muted: {
           DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
@@ -47,6 +47,13 @@ const config: Config = {
       },
       letterSpacing: {
         widest: '0.18em',
+      },
+      boxShadow: {
+        // Accent-colored shadows that follow the theme (gold in dark mode,
+        // violet in light mode) via the --gold CSS variable.
+        'gold-sm': '0 4px 18px rgb(var(--gold) / 0.25)',
+        'gold-lg': '0 10px 28px rgb(var(--gold) / 0.45)',
+        'gold-glow': '0 10px 28px rgb(var(--gold) / 0.4)',
       },
       animation: {
         'fade-in-up': 'fadeInUp 700ms ease-out both',
