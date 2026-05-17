@@ -179,11 +179,13 @@ export function VoiceButton() {
             }}
           />
 
-          {/* Icon */}
+          {/* Icon — white on the light/violet bg, gold on the dark bg.
+              Use an arbitrary value for white so the html:not(.dark)
+              .text-white override doesn't hijack it in light mode. */}
           <Sparkles
             size={22}
             strokeWidth={1.7}
-            className="relative z-10 text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"
+            className="relative z-10 text-[#fff] drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] dark:text-gold"
           />
         </button>
       </div>
