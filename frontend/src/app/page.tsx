@@ -4,6 +4,7 @@ import { Services } from '@/components/sections/Services';
 import { Portfolio } from '@/components/sections/Portfolio';
 import { Resume } from '@/components/sections/Resume';
 import { Blog } from '@/components/sections/Blog';
+import { Travel } from '@/components/sections/Travel';
 import { Contact } from '@/components/sections/Contact';
 
 export default function HomePage() {
@@ -15,6 +16,7 @@ export default function HomePage() {
       <Portfolio />
       <Resume />
       <Blog />
+      <Travel />
       <Contact />
     </>
   );
