@@ -1,9 +1,16 @@
 # AI-Powered Portfolio
 
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs)
+![FastAPI](https://img.shields.io/badge/FastAPI-planned-009688?logo=fastapi)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)
+![License](https://img.shields.io/badge/license-personal-lightgrey)
+
 Voice-driven personal portfolio for **Md Redwan Hossain**.
 
 A visitor can speak to the site; an LLM agent answers in voice and navigates
 the page in real-time. Built as a sliced, phased project.
+
+> **Live demo:** TBA · **Author:** [@RedwanRipon](https://github.com/RedwanRipon)
 
 ## Architecture (high-level)
 
