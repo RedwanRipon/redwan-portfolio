@@ -42,7 +42,7 @@ export function ThemeToggle() {
     return (
       <div
         aria-hidden
-        className="pointer-events-none fixed bottom-[4.75rem] right-6 z-50 h-11 w-11"
+        className="pointer-events-none fixed bottom-[5.25rem] right-6 z-50 h-11 w-11"
       />
     );
   }
@@ -55,7 +55,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="fixed bottom-[4.75rem] right-6 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-ink-card/80 text-white shadow-lg backdrop-blur transition hover:scale-110 hover:border-gold hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/40 motion-safe:animate-pop-in"
+      className="fixed bottom-[5.25rem] right-6 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-ink-card/80 text-white shadow-lg backdrop-blur transition hover:scale-110 hover:border-gold hover:text-gold focus:outline-none focus:ring-2 focus:ring-gold/40 motion-safe:animate-pop-in"
     >
       {/* Subtle icon swap with rotation */}
       <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center">
