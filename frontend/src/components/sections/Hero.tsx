@@ -70,14 +70,14 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               href="#portfolio"
-              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-neutral-900 shadow-gold-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-gold-lg focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-gold-dark hover:shadow-gold-lg focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97] dark:!text-neutral-900"
             >
               <span className="relative z-10">View Work</span>
             </Link>
 
             <Link
               href="#contact"
-              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:text-neutral-900 hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:text-neutral-900 focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97]"
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-white/15 px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:!text-white hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:!text-white focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97] dark:hover:!text-neutral-900 dark:focus-visible:!text-neutral-900"
             >
               <span className="relative z-10">Get in touch</span>
               {/* Gold fill slides in from the left on hover / focus */}
