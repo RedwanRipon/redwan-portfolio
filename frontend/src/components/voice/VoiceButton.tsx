@@ -112,8 +112,8 @@ export function VoiceButton() {
           className={cn(
             'group relative overflow-hidden rounded-full border bg-ink-card/80 px-5 py-3 font-display text-sm font-medium backdrop-blur transition motion-safe:animate-border-pulse',
             active
-              ? 'border-violet-400/60 text-violet-200'
-              : 'border-white/15 text-white hover:border-violet-400/60 hover:text-violet-200',
+              ? 'border-violet-400/60 text-violet-700 dark:text-violet-200'
+              : 'border-white/15 text-white hover:border-violet-400/60 hover:text-violet-700 dark:hover:text-violet-200',
           )}
         >
           <span className="relative z-10">
