@@ -20,7 +20,7 @@ const NAV_LINKS = [
 /** Routes whose top is a dark hero banner — when the navbar is
  *  transparent above this banner, its text must stay light so it
  *  doesn't disappear into the image (especially in light mode). */
-const DARK_BANNER_ROUTES = new Set<string>(['/blogs']);
+const DARK_BANNER_ROUTES = new Set<string>(['/blogs', '/travels']);
 
 export function Navbar() {
   const pathname = usePathname();
