@@ -21,7 +21,7 @@ export default function TravelsIndexPage() {
             smaller size on Chrome/Firefox). Muted + playsInline so
             browsers autoplay it without a user gesture. */}
         <video
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_25%]"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_35%]"
           autoPlay
           muted
           loop
