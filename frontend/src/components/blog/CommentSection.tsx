@@ -69,11 +69,40 @@ export function CommentSection({ slug }: { slug: string }) {
     return `${Math.floor(sec / 86400)}d ago`;
   }
 
+  const hasComments = comments.length > 0;
+
   return (
     <div className="rounded-2xl border border-white/10 bg-ink-card p-5">
       <h3 className="mb-1 font-display text-base font-semibold text-white">Comments</h3>
-      <p className="mb-5 text-xs text-muted">Leave a thought below.</p>
+      <p className="mb-5 text-xs text-muted">
+        {hasComments
+          ? `${comments.length} comment${comments.length === 1 ? '' : 's'} so far. Add yours below.`
+          : 'No comments yet — be the first to leave a thought.'}
+      </p>
 
+      {/* Existing comments — listed first (chat-style: history on top) */}
+      {hasComments && (
+        <>
+          <ul className="space-y-3">
+            {comments.map((c) => (
+              <li key={c.id} className="rounded-lg border border-white/5 bg-ink/40 p-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="font-display text-sm font-semibold text-white">
+                    {c.name}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest text-muted">
+                    {relative(c.createdAt)}
+                  </p>
+                </div>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted">{c.text}</p>
+              </li>
+            ))}
+          </ul>
+          <hr className="my-5 border-white/10" />
+        </>
+      )}
+
+      {/* Comment form — always at the bottom */}
       <form onSubmit={submit} className="space-y-3">
         <input
           required
@@ -99,32 +128,6 @@ export function CommentSection({ slug }: { slug: string }) {
           {sent ? 'Sent!' : 'Send'}
         </button>
       </form>
-
-      <hr className="my-5 border-white/10" />
-
-      <h4 className="mb-3 font-display text-xs font-semibold uppercase tracking-widest text-gold">
-        {comments.length} comment{comments.length === 1 ? '' : 's'}
-      </h4>
-
-      {comments.length === 0 ? (
-        <p className="text-sm text-muted">Be the first to comment.</p>
-      ) : (
-        <ul className="space-y-4">
-          {comments.map((c) => (
-            <li key={c.id} className="rounded-lg border border-white/5 bg-ink/40 p-3">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="font-display text-sm font-semibold text-white">
-                  {c.name}
-                </p>
-                <p className="text-[10px] uppercase tracking-widest text-muted">
-                  {relative(c.createdAt)}
-                </p>
-              </div>
-              <p className="mt-1 whitespace-pre-line text-sm text-muted">{c.text}</p>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
