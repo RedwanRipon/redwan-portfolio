@@ -23,7 +23,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
   return (
     <div className="min-h-screen bg-ink">
-      <div className="container pb-16 pt-32">
+      {/* Wider than the default container so the article column has
+          breathing room. Sidebars stay narrow on the outside. */}
+      <div className="mx-auto w-full max-w-[1360px] px-4 pb-16 pt-32 sm:px-6 lg:px-8">
         {/* Back link */}
         <Link
           href="/blogs"
@@ -34,7 +36,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </Link>
 
         {/* 3-column grid: suggestions (sticky) · article (scrolls) · comments (sticky) */}
-        <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
+        <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)_260px] lg:gap-8 xl:grid-cols-[230px_minmax(0,1fr)_300px]">
           {/* Left — suggestions */}
           <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto">
             <SuggestionPosts currentSlug={post.slug} />
