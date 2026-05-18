@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export const metadata = { title: 'Blogs — Md Redwan Hossain' };
 
-export default function BlogIndexPage() {
+export default function BlogsIndexPage() {
   return (
     <div className="bg-ink">
       {/* Page header — accounts for the fixed navbar (pt-32) */}
@@ -38,7 +38,7 @@ export default function BlogIndexPage() {
               key={post.slug}
               className="group overflow-hidden rounded-xl border border-white/10 bg-ink-card transition hover:border-gold/40"
             >
-              <Link href={`/blog/${post.slug}`} className="block">
+              <Link href={`/blogs/${post.slug}`} className="block">
                 <div
                   className={cn('relative aspect-[16/10] bg-gradient-to-br', post.gradient)}
                 >

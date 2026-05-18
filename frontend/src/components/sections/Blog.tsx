@@ -23,7 +23,7 @@ export function Blog() {
               key={post.slug}
               className="group overflow-hidden rounded-xl border border-white/10 bg-ink-card transition hover:border-gold/40"
             >
-              <Link href={`/blog/${post.slug}`} className="block">
+              <Link href={`/blogs/${post.slug}`} className="block">
                 <div
                   className={cn('relative aspect-[16/10] bg-gradient-to-br', post.gradient)}
                 >
@@ -48,7 +48,7 @@ export function Blog() {
         {/* See all blogs CTA */}
         <div className="mt-12 flex justify-center">
           <Link
-            href="/blog"
+            href="/blogs"
             className="group relative inline-flex items-center gap-2 overflow-hidden rounded-md border border-white/15 px-6 py-2.5 font-display text-xs font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:!text-white hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:!text-white focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97] dark:hover:!text-neutral-900 dark:focus-visible:!text-neutral-900"
           >
             <span className="relative z-10">See all blogs</span>
