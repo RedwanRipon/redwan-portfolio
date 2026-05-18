@@ -1,16 +1,41 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { POSTS } from '@/lib/blog-data';
-import { cn } from '@/lib/utils';
+import { BlogsListing } from '@/components/blog/BlogsListing';
 
 export const metadata = { title: 'Blogs — Md Redwan Hossain' };
 
 export default function BlogsIndexPage() {
   return (
     <div className="bg-ink">
-      {/* Page header — accounts for the fixed navbar (pt-32) */}
-      <header className="border-b border-white/10 bg-ink-deep pb-16 pt-32">
-        <div className="container">
+      {/* Page header with decorative banner */}
+      <header className="relative overflow-hidden border-b border-white/10 bg-ink-deep pb-20 pt-32">
+        {/* Banner layers — purely decorative, no pointer events */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* Large blurred accent orbs */}
+          <div className="absolute -top-24 left-12 h-72 w-72 rounded-full bg-gold/15 blur-3xl" />
+          <div className="absolute -bottom-10 right-12 h-80 w-80 rounded-full bg-violet-500/15 blur-3xl" />
+          {/* Radial highlight */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(circle at 28% 35%, rgb(var(--gold) / 0.10), transparent 60%)',
+            }}
+          />
+          {/* Subtle dot grid — flips with theme via --fg variable */}
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                'radial-gradient(rgb(var(--fg) / 0.08) 1px, transparent 1.2px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
+          {/* Bottom glow line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        </div>
+
+        <div className="container relative">
           <Link
             href="/#blog"
             className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted transition hover:text-gold"
@@ -32,38 +57,7 @@ export default function BlogsIndexPage() {
       </header>
 
       <main className="container py-16">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {POSTS.map((post) => (
-            <article
-              key={post.slug}
-              className="group overflow-hidden rounded-xl border border-white/10 bg-ink-card transition hover:border-gold/40"
-            >
-              <Link href={`/blogs/${post.slug}`} className="block">
-                <div
-                  className={cn('relative aspect-[16/10] bg-gradient-to-br', post.gradient)}
-                >
-                  <span className="absolute bottom-4 left-4 rounded bg-ink/80 px-3 py-1 text-xs font-medium uppercase tracking-widest text-gold">
-                    {post.date}
-                  </span>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-display text-lg font-semibold leading-snug text-white transition group-hover:text-gold">
-                    {post.title}
-                  </h3>
-                  <p className="mt-3 text-sm text-muted">{post.excerpt}</p>
-                  <p className="mt-5 inline-flex items-center gap-2 font-display text-sm font-medium text-gold">
-                    Continue reading &rarr;
-                  </p>
-                </div>
-              </Link>
-            </article>
-          ))}
-        </div>
-
-        {/* Empty state hint if no posts */}
-        {POSTS.length === 0 && (
-          <p className="text-center text-muted">No posts yet — check back soon.</p>
-        )}
+        <BlogsListing />
       </main>
     </div>
   );
