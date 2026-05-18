@@ -41,7 +41,7 @@ export default function BlogsIndexPage() {
             <ArrowLeft size={14} />
             Back to home
           </Link>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold drop-shadow">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest !text-white drop-shadow dark:!text-gold">
             Notes
           </p>
           <h1 className="font-display text-4xl font-bold !text-white drop-shadow-lg md:text-5xl">
