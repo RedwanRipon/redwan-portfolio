@@ -86,9 +86,10 @@ export function CommentSection({ slug }: { slug: string }) {
     return `${Math.floor(sec / 86400)}d ago`;
   }
 
+  const PREVIEW_COUNT = 3;
   const hasComments = comments.length > 0;
-  const latest = comments[0];
-  const remaining = comments.length - 1;
+  const preview = comments.slice(0, PREVIEW_COUNT);
+  const remaining = Math.max(0, comments.length - PREVIEW_COUNT);
 
   return (
     <>
@@ -100,26 +101,28 @@ export function CommentSection({ slug }: { slug: string }) {
             : 'No comments yet — be the first to leave a thought.'}
         </p>
 
-        {/* Latest comment only (preview) + 'see all' link */}
+        {/* Latest few comments (preview) + 'see all' link */}
         {hasComments && (
           <>
             <ul className="space-y-3">
-              <li
-                key={latest.id}
-                className="rounded-lg border border-white/5 bg-ink/40 p-3"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="font-display text-sm font-semibold text-white">
-                    {latest.name}
+              {preview.map((c) => (
+                <li
+                  key={c.id}
+                  className="rounded-lg border border-white/5 bg-ink/40 p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="font-display text-sm font-semibold text-white">
+                      {c.name}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted">
+                      {relative(c.createdAt)}
+                    </p>
+                  </div>
+                  <p className="mt-1 whitespace-pre-line text-sm text-muted">
+                    {c.text}
                   </p>
-                  <p className="text-[10px] uppercase tracking-widest text-muted">
-                    {relative(latest.createdAt)}
-                  </p>
-                </div>
-                <p className="mt-1 whitespace-pre-line text-sm text-muted">
-                  {latest.text}
-                </p>
-              </li>
+                </li>
+              ))}
             </ul>
 
             {remaining > 0 && (
