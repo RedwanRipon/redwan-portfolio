@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Download, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,11 +18,12 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string>('home');
 
-  // Solidify nav after scroll, and observe section anchors for active state.
+  // Solidify nav after scroll.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
@@ -29,7 +31,16 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Section observer — only runs on the home page where the anchor
+  // sections actually exist. On any other route (e.g. /blogs) we
+  // clear the active highlight so the navbar does not falsely flag
+  // the last section we were viewing.
   useEffect(() => {
+    if (pathname !== '/') {
+      setActive('');
+      return;
+    }
+
     const ids = NAV_LINKS.map((l) => l.href.split('#')[1]).filter(Boolean);
     const sections = ids
       .map((id) => document.getElementById(id))
@@ -46,7 +57,7 @@ export function Navbar() {
     );
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return (
     <header
