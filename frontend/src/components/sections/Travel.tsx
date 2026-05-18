@@ -1,29 +1,13 @@
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { ArrowRight, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SectionTitle } from '@/components/ui/SectionTitle';
-
-interface Place {
-  slug: string;
-  city: string;
-  country: string;
-  year?: string;
-  /** Tailwind gradient for the placeholder thumbnail. */
-  gradient: string;
-}
-
-// TODO: replace with real photos in /public/images/travel/*.jpg
-// and real detail pages at /travel/[slug].
-const PLACES: Place[] = [
-  { slug: 'berlin', city: 'Berlin', country: 'Germany', year: '2025', gradient: 'from-amber-500/40 to-orange-700/40' },
-  { slug: 'munich', city: 'Munich', country: 'Germany', year: '2025', gradient: 'from-sky-500/40 to-indigo-700/40' },
-  { slug: 'dhaka', city: 'Dhaka', country: 'Bangladesh', year: '2024', gradient: 'from-emerald-500/40 to-teal-700/40' },
-  { slug: 'paris', city: 'Paris', country: 'France', year: '2025', gradient: 'from-rose-500/40 to-pink-700/40' },
-  { slug: 'prague', city: 'Prague', country: 'Czechia', year: '2025', gradient: 'from-violet-500/40 to-fuchsia-700/40' },
-  { slug: 'amsterdam', city: 'Amsterdam', country: 'Netherlands', year: '2025', gradient: 'from-lime-500/40 to-green-700/40' },
-];
+import { PLACES } from '@/lib/travel-data';
 
 export function Travel() {
+  // Show the 3 most recent on the home section.
+  const recent = PLACES.slice(0, 3);
+
   return (
     <section id="travel" className="section-padding bg-ink-deep">
       <div className="container">
@@ -34,12 +18,12 @@ export function Travel() {
         />
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {PLACES.map((p) => (
+          {recent.map((p) => (
             <article
               key={p.slug}
               className="group overflow-hidden rounded-xl border border-white/10 bg-ink-card transition hover:border-gold/40"
             >
-              <Link href={`/travel/${p.slug}`} className="block">
+              <Link href={`/travels/${p.slug}`} className="block">
                 <div
                   className={cn(
                     'relative aspect-[4/3] w-full bg-gradient-to-br',
@@ -51,24 +35,41 @@ export function Travel() {
                     <MapPin size={12} />
                     {p.country}
                   </div>
-                  {p.year && (
-                    <span className="absolute right-4 top-4 rounded-full bg-ink/70 px-3 py-1 text-xs font-medium text-white">
-                      {p.year}
-                    </span>
-                  )}
+                  <span className="absolute right-4 top-4 rounded-full bg-ink/70 px-3 py-1 text-xs font-medium text-white">
+                    {p.date}
+                  </span>
                 </div>
                 <div className="p-5">
                   <h3 className="font-display text-lg font-semibold text-white transition group-hover:text-gold">
                     {p.city}
                   </h3>
                   <p className="mt-1 text-sm text-muted">{p.country}</p>
+                  <p className="mt-3 line-clamp-2 text-sm text-muted">{p.excerpt}</p>
                   <p className="mt-4 inline-flex items-center gap-2 font-display text-sm font-medium text-gold opacity-0 transition group-hover:opacity-100">
-                    See more &rarr;
+                    Read story &rarr;
                   </p>
                 </div>
               </Link>
             </article>
           ))}
+        </div>
+
+        {/* More travel posts CTA */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/travels"
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-md border border-white/15 px-6 py-2.5 font-display text-xs font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:!text-white hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:!text-white focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97] dark:hover:!text-neutral-900 dark:focus-visible:!text-neutral-900"
+          >
+            <span className="relative z-10">More travel posts</span>
+            <ArrowRight
+              size={14}
+              className="relative z-10 transition-transform group-hover:translate-x-1"
+            />
+            <span
+              aria-hidden
+              className="absolute inset-0 origin-left scale-x-0 bg-gold transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
+            />
+          </Link>
         </div>
       </div>
     </section>
