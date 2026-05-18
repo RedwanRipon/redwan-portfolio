@@ -91,4 +91,51 @@ h1, h2, h3, h4, h5, h6 {
   .section-padding {
     @apply py-20 md:py-24;
   }
+
+  /* Prose styling for blog post bodies. Applied via the `blog-body`
+     class on a wrapper around the post's JSX content. Each rule is
+     theme-aware (text-white, text-muted, bg-ink-deep all flip via
+     CSS variables / overrides). */
+  .blog-body > * + * {
+    @apply mt-4;
+  }
+  .blog-body p {
+    @apply leading-relaxed text-muted;
+  }
+  .blog-body p > strong {
+    @apply font-semibold text-white;
+  }
+  .blog-body p > em {
+    @apply italic;
+  }
+  .blog-body h2 {
+    @apply mt-10 font-display text-2xl font-bold text-white;
+  }
+  .blog-body h3 {
+    @apply mt-8 font-display text-xl font-semibold text-white;
+  }
+  .blog-body a {
+    @apply text-gold underline-offset-4 hover:underline;
+  }
+  .blog-body ul {
+    @apply list-disc space-y-2 pl-6 text-muted marker:text-gold;
+  }
+  .blog-body ol {
+    @apply list-decimal space-y-2 pl-6 text-muted marker:text-gold;
+  }
+  .blog-body code {
+    @apply rounded bg-white/10 px-1.5 py-0.5 font-mono text-[0.85em] text-white;
+  }
+  .blog-body pre {
+    @apply overflow-x-auto rounded-lg border border-white/10 bg-ink-deep p-4 text-sm;
+  }
+  .blog-body pre code {
+    @apply bg-transparent p-0 text-sm;
+  }
+  .blog-body img {
+    @apply rounded-lg border border-white/10;
+  }
+  .blog-body blockquote {
+    @apply border-l-2 border-gold/60 bg-gold/5 px-4 py-3 italic text-white/90;
+  }
 }
