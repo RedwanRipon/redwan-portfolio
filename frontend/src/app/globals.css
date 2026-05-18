@@ -136,6 +136,12 @@ h1, h2, h3, h4, h5, h6 {
     @apply rounded-lg border border-white/10;
   }
   .blog-body blockquote {
-    @apply border-l-2 border-gold/60 bg-gold/5 px-4 py-3 italic text-white/90;
+    @apply border-l-2 border-gold/60 bg-gold/5 px-4 py-3 italic text-white;
+  }
+  /* Body text inside blockquotes is light by default — strip the
+     /90 modifier so the global text-white override flips it to
+     dark slate in light mode. */
+  .blog-body blockquote p {
+    @apply text-white;
   }
 }
