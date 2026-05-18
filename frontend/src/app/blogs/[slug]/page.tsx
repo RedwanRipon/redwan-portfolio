@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { POSTS } from '@/lib/blog-data';
 import { SuggestionPosts } from '@/components/blog/SuggestionPosts';
 import { CommentSection } from '@/components/blog/CommentSection';
+import { PostReactions } from '@/components/blog/PostReactions';
 
 export function generateStaticParams() {
   return POSTS.map((p) => ({ slug: p.slug }));
@@ -58,6 +59,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             </header>
 
             <div className="blog-body">{post.body}</div>
+
+            {/* Like / dislike at the end of the post */}
+            <PostReactions slug={post.slug} />
           </article>
 
           {/* Right — comments */}
