@@ -17,11 +17,21 @@ const NAV_LINKS = [
   { href: '/#contact', label: 'Contact' },
 ];
 
+/** Routes whose top is a dark hero banner — when the navbar is
+ *  transparent above this banner, its text must stay light so it
+ *  doesn't disappear into the image (especially in light mode). */
+const DARK_BANNER_ROUTES = new Set<string>(['/blogs']);
+
 export function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string>('home');
+
+  // True while the navbar is floating transparently above a dark
+  // hero banner. Once the user scrolls (navbar becomes solid) or
+  // we're not on a banner page, this is false.
+  const onDarkBanner = !scrolled && DARK_BANNER_ROUTES.has(pathname);
 
   // Solidify nav after scroll.
   useEffect(() => {
@@ -69,7 +79,13 @@ export function Navbar() {
       )}
     >
       <nav className="container flex items-center justify-between py-4">
-        <Link href="/#home" className="font-display text-xl font-bold tracking-tight text-white">
+        <Link
+          href="/#home"
+          className={cn(
+            'font-display text-xl font-bold tracking-tight',
+            onDarkBanner ? '!text-white' : 'text-white',
+          )}
+        >
           Redwan<span className="text-gold">.</span>
         </Link>
 
@@ -85,7 +101,11 @@ export function Navbar() {
                     href={link.href}
                     className={cn(
                       'font-display text-sm font-medium tracking-wide transition-colors',
-                      isActive ? 'text-gold' : 'text-white hover:text-gold',
+                      isActive
+                        ? 'text-gold'
+                        : onDarkBanner
+                          ? '!text-white hover:!text-gold'
+                          : 'text-white hover:text-gold',
                     )}
                   >
                     {link.label}
@@ -114,7 +134,10 @@ export function Navbar() {
           type="button"
           aria-label="Toggle menu"
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md p-2 text-white lg:hidden"
+          className={cn(
+            'rounded-md p-2 lg:hidden',
+            onDarkBanner ? '!text-white' : 'text-white',
+          )}
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
