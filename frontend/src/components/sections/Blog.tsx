@@ -1,43 +1,13 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
+import { POSTS } from '@/lib/blog-data';
 import { cn } from '@/lib/utils';
 
-interface Post {
-  slug: string;
-  date: string;
-  title: string;
-  excerpt: string;
-  gradient: string;
-}
-
-const POSTS: Post[] = [
-  {
-    slug: 'building-voice-agents',
-    date: 'May 10, 2026',
-    title: 'Building voice agents that actually understand context',
-    excerpt:
-      'How I combined Whisper, LangChain tool calling, and a tiny Zustand store to make a portfolio that listens.',
-    gradient: 'from-amber-500/40 to-rose-700/40',
-  },
-  {
-    slug: 'rag-over-cv',
-    date: 'Apr 22, 2026',
-    title: 'A practical RAG setup over your own CV',
-    excerpt:
-      'Chunking strategies, embeddings, and why ChromaDB is plenty for a personal site — no Pinecone needed.',
-    gradient: 'from-sky-500/40 to-violet-700/40',
-  },
-  {
-    slug: 'next-fastapi',
-    date: 'Mar 30, 2026',
-    title: 'Next.js + FastAPI: my default starter for AI apps',
-    excerpt:
-      'Typed end-to-end, deploys to Vercel and Render, fast to iterate. Here’s the layout I keep reaching for.',
-    gradient: 'from-emerald-500/40 to-teal-700/40',
-  },
-];
-
 export function Blog() {
+  // Latest 3 posts only on the home section.
+  const recent = POSTS.slice(0, 3);
+
   return (
     <section id="blog" className="section-padding bg-ink">
       <div className="container">
@@ -48,7 +18,7 @@ export function Blog() {
         />
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {POSTS.map((post) => (
+          {recent.map((post) => (
             <article
               key={post.slug}
               className="group overflow-hidden rounded-xl border border-white/10 bg-ink-card transition hover:border-gold/40"
@@ -73,6 +43,25 @@ export function Blog() {
               </Link>
             </article>
           ))}
+        </div>
+
+        {/* See all blogs CTA */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/blog"
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-md border border-white/15 px-6 py-2.5 font-display text-xs font-semibold uppercase tracking-widest text-white transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:!text-white hover:shadow-gold-glow focus-visible:-translate-y-0.5 focus-visible:border-gold focus-visible:!text-white focus-visible:shadow-gold-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink active:scale-[0.97] dark:hover:!text-neutral-900 dark:focus-visible:!text-neutral-900"
+          >
+            <span className="relative z-10">See all blogs</span>
+            <ArrowRight
+              size={14}
+              className="relative z-10 transition-transform group-hover:translate-x-1"
+            />
+            {/* Gold fill slides in from the left on hover / focus */}
+            <span
+              aria-hidden
+              className="absolute inset-0 origin-left scale-x-0 bg-gold transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100"
+            />
+          </Link>
         </div>
       </div>
     </section>
