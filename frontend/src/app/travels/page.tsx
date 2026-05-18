@@ -29,8 +29,9 @@ export default function TravelsIndexPage() {
           preload="auto"
           aria-hidden
         >
-          <source src="/videos/travel-banner.webm" type="video/webm" />
+          {/* mp4 is smaller in this case, list it first */}
           <source src="/videos/travel-banner.mp4" type="video/mp4" />
+          <source src="/videos/travel-banner.webm" type="video/webm" />
         </video>
 
         {/* Dark gradient overlay so the title stays readable on top of
