@@ -1,19 +1,22 @@
+# Loose lower-bound pins so pip picks recent versions that ship
+# Python 3.13 wheels. Tested combination uses numpy 2.x (the old
+# numpy 1.26 has no Python 3.13 wheel and was forcing a source build).
+
 # --- Web framework ---
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
-python-dotenv==1.0.1
-pydantic==2.9.2
-pydantic-settings==2.5.2
+fastapi>=0.115
+uvicorn[standard]>=0.32
+python-dotenv>=1.0
+pydantic>=2.9
+pydantic-settings>=2.5
 
 # --- LLM / RAG stack ---
-langchain==0.3.7
-langchain-core==0.3.18
-langchain-openai==0.2.5
-langchain-chroma==0.1.4
-langchain-community==0.3.5
-chromadb==0.5.18
-openai==1.54.3
-tiktoken==0.8.0
+langchain>=0.3.13
+langchain-openai>=0.2.10
+langchain-chroma>=0.1.4
+langchain-community>=0.3.13
+chromadb>=0.5.20
+openai>=1.54
+tiktoken>=0.8
 
 # --- Document parsing ---
-pypdf==4.3.1
+pypdf>=4.3
