@@ -1,17 +1,37 @@
 """CLI: rebuild the ChromaDB index from /backend/data/sources.
 
-Run from /backend:
+Run from /backend (with the venv active and OPENAI_API_KEY set):
+
     python -m scripts.reindex
 
-Phase 2 Step 2 implements the real ingest. For now this is a stub
-so the script wiring is in place.
+Idempotent — the existing index is wiped first, so you can re-run
+this any time you update the CV (or, later, blog/travel content).
 """
-from app.services import ingest
+import sys
+import time
+
+from app.services.ingest import ingest_cv
 
 
 def main() -> None:
-    print("Reindex stub — will rebuild ChromaDB once Step 2 lands.")
-    _ = ingest  # silence unused-import lint until Step 2
+    print("=== Reindex ===")
+    start = time.time()
+    try:
+        count = ingest_cv()
+    except FileNotFoundError as exc:
+        print(f"\nERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as exc:  # noqa: BLE001
+        print(f"\nERROR during ingest: {exc}", file=sys.stderr)
+        raise
+
+    elapsed = time.time() - start
+    print(f"\nOK — {count} chunk(s) embedded and persisted in {elapsed:.1f}s.")
+    print("\nQuick sanity check:")
+    print(
+        "  python -c \"from app.services.vector_store import search; "
+        "print(search('master thesis', 2))\""
+    )
 
 
 if __name__ == "__main__":
