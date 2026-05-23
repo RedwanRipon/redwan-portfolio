@@ -5,16 +5,14 @@ content (which currently live as JSX in the frontend).
 
 Public entry point: `ingest_cv()` (also called by `scripts/reindex.py`).
 """
-import shutil
 from pathlib import Path
 
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
 from app.config import settings
-from app.services.vector_store import COLLECTION_NAME, get_embeddings
+from app.services.vector_store import get_vectorstore
 
 
 # Chunking targets. CVs are dense so we keep chunks small with generous
@@ -50,16 +48,28 @@ def chunk_text(text: str, source: str) -> list[Document]:
     ]
 
 
-def _wipe_chroma_dir() -> None:
-    """Delete the persistent ChromaDB folder so the next write starts fresh.
+def _clear_collection() -> None:
+    """Remove every chunk from the existing ChromaDB collection.
 
-    Re-running the ingest is idempotent — old chunks don't pile up
-    alongside new ones.
+    We deliberately don't use ``shutil.rmtree`` on the persist dir
+    because on Windows it fails when another process (typically a
+    running uvicorn) is holding handles to the underlying HNSW /
+    SQLite files. Chroma's own delete-by-id API works in-place and
+    side-steps the file lock entirely.
     """
-    chroma_path = settings.chroma_path
-    if chroma_path.exists():
-        shutil.rmtree(chroma_path)
-    chroma_path.mkdir(parents=True, exist_ok=True)
+    settings.chroma_path.mkdir(parents=True, exist_ok=True)
+    try:
+        store = get_vectorstore()
+        existing = store.get()
+        ids = existing.get("ids") or []
+        if ids:
+            store.delete(ids=ids)
+            print(f"[ingest]   cleared {len(ids)} existing chunk(s)")
+        else:
+            print("[ingest]   (no existing chunks to clear)")
+    except Exception as exc:  # noqa: BLE001
+        # Most common case: collection doesn't exist yet (first ever run).
+        print(f"[ingest]   no existing collection ({type(exc).__name__})")
 
 
 def ingest_cv(cv_path: Path | None = None) -> int:
@@ -83,18 +93,14 @@ def ingest_cv(cv_path: Path | None = None) -> int:
     docs = chunk_text(text, source="cv")
     print(f"[ingest]   -> {len(docs)} chunks (size~{CHUNK_SIZE}, overlap={CHUNK_OVERLAP})")
 
-    print(f"[ingest] wiping old index at {settings.chroma_path} …")
-    _wipe_chroma_dir()
+    print("[ingest] clearing previous chunks from ChromaDB …")
+    _clear_collection()
 
     print(
         f"[ingest] embedding via OpenAI {settings.openai_embedding_model} "
         f"and writing to ChromaDB …"
     )
-    Chroma.from_documents(
-        documents=docs,
-        embedding=get_embeddings(),
-        collection_name=COLLECTION_NAME,
-        persist_directory=str(settings.chroma_path),
-    )
+    store = get_vectorstore()
+    store.add_documents(docs)
 
     return len(docs)
