@@ -11,13 +11,13 @@ interface TimelineItem {
 const EDUCATION: TimelineItem[] = [
   {
     title: 'M.Sc. in Data Science (Major: Machine Learning & AI)',
-    year: '2026',
+    year: '2022/04 — 2026/05',
     org: 'University of Erlangen-Nuremberg, Germany',
     desc: 'Coursework: Pattern Recognition, Deep Learning, ML for Time Series, High-dimensional Statistics, Anomaly Detection, Business Intelligence.',
   },
   {
     title: 'B.Sc. in Computer Science & Engineering',
-    year: '2020',
+    year: '2016/01 — 2020/01',
     org: 'Southeast University, Dhaka, Bangladesh',
     desc: 'Coursework: Algorithms, OOP, Data Mining, Linear Algebra, Artificial Intelligence, Computer Graphics, Advanced Networking.',
   },
