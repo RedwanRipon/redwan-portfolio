@@ -1,14 +1,14 @@
-"""POST /chat endpoint.
+"""POST /chat endpoint — runs the agent and returns its reply."""
+import logging
 
-Phase 2 Step 1: returns a stub so the frontend can wire up end-to-end
-before the LangChain agent is built. Step 3 replaces the stub with a
-real call into services.agent.run_agent().
-"""
 from fastapi import APIRouter, HTTPException
 
 from app.schemas import ChatRequest, ChatResponse
+from app.services.agent import run_agent
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+log = logging.getLogger(__name__)
 
 
 @router.post("", response_model=ChatResponse)
@@ -16,13 +16,13 @@ def chat(req: ChatRequest) -> ChatResponse:
     if not req.message.strip():
         raise HTTPException(status_code=400, detail="message cannot be empty")
 
-    # TODO Step 3 — delegate to services.agent.run_agent(req.message)
-    return ChatResponse(
-        speech=(
-            "The agent isn't wired up yet — this is a Phase 2 Step 1 stub. "
-            f"You said: \"{req.message}\". Real answers come once the "
-            "ChromaDB ingest + LangChain agent ship."
-        ),
-        route=None,
-        highlight_id=None,
-    )
+    try:
+        return run_agent(req.message)
+    except Exception as exc:  # noqa: BLE001
+        # Log full traceback to the server console; return a friendly
+        # error to the client so we don't leak internals.
+        log.exception("Agent failed while handling: %s", req.message)
+        raise HTTPException(
+            status_code=500,
+            detail="The agent hit an error. Check the backend logs.",
+        ) from exc
