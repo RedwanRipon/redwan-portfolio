@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     # --- OpenAI ---
     openai_api_key: str = ""
-    openai_llm_model: str = "gpt-4o-mini"
+    openai_llm_model: str = "gpt-5"
     openai_embedding_model: str = "text-embedding-3-small"
 
     # --- CORS — comma-separated origins ---

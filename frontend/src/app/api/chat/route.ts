@@ -30,8 +30,10 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      // The agent can take ~1-3s, so give it a generous timeout.
-      signal: AbortSignal.timeout(30_000),
+      // Generous timeout — GPT-5 + a tool-calling loop can run ~20-40s,
+      // and Render free-tier cold starts add up to another ~30s on
+      // top. 90s covers both.
+      signal: AbortSignal.timeout(90_000),
     });
 
     if (!upstream.ok) {

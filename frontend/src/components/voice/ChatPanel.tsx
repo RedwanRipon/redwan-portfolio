@@ -217,7 +217,7 @@ export function ChatPanel({ open, onClose }: Props) {
             <p className="font-semibold">Couldn&apos;t reach the agent</p>
             <p className="mt-1 opacity-80">{error}</p>
             <p className="mt-1 opacity-60">
-              Make sure the backend is running at localhost:8000.
+              The agent may be cold-starting — try again in a moment.
             </p>
           </div>
         )}
