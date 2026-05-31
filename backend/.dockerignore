@@ -8,7 +8,6 @@ __pycache__/
 .gitignore
 .pytest_cache/
 .mypy_cache/
-data/chroma_db/
 tests/
 *.log
 README.md
