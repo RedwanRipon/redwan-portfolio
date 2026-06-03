@@ -20,3 +20,8 @@ tiktoken>=0.8
 
 # --- Document parsing ---
 pypdf>=4.3
+
+# --- Voice (Phase 3): file uploads + audio I/O ---
+# FastAPI needs python-multipart to parse multipart/form-data (used by
+# the /voice/chat endpoint when the browser uploads recorded audio).
+python-multipart>=0.0.9

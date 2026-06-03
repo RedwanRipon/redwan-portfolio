@@ -34,6 +34,38 @@ class ChatResponse(BaseModel):
     )
 
 
+class VoiceResponse(BaseModel):
+    """Voice-chat reply. Same fields as ChatResponse plus the heard
+    transcript and the synthesized audio.
+    """
+
+    transcript: str = Field(
+        ...,
+        description="What Whisper heard the user say.",
+    )
+    speech: str = Field(
+        ...,
+        description="Agent's text reply (also synthesized into audio_b64).",
+    )
+    route: Optional[str] = Field(
+        default=None,
+        description="Optional Next.js route to navigate to.",
+    )
+    highlight_id: Optional[str] = Field(
+        default=None,
+        description="Optional DOM id to spotlight after navigation.",
+    )
+    audio_b64: str = Field(
+        ...,
+        description="Base64-encoded TTS audio (mp3 by default).",
+    )
+    audio_mime: str = Field(
+        default="audio/mpeg",
+        description="MIME type matching audio_b64. The frontend uses this "
+        "to construct a data: URL or Blob for playback.",
+    )
+
+
 class HealthResponse(BaseModel):
     """Liveness probe response."""
 
