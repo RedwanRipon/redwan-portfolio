@@ -77,17 +77,18 @@ async def voice_chat(audio: UploadFile = File(...)) -> VoiceResponse:
     buf.name = audio.filename or "audio.webm"
 
     try:
-        stt = client.audio.transcriptions.create(
+        # Use Whisper's TRANSLATE task instead of transcribe. translate
+        # always outputs ENGLISH regardless of detected source language,
+        # so even when Whisper mis-IDs an accented English speaker as
+        # Bengali/Hindi/etc., we still get an English transcript.
+        # transcribe + language='en' isn't enough — Whisper honors its
+        # phonetic interpretation and produces non-Latin script.
+        stt = client.audio.translations.create(
             model=STT_MODEL,
             file=buf,
-            # Force English transcription. Whisper's auto-detection
-            # sometimes lands on Hindi or Bengali for South-Asian English
-            # accents, producing transcripts in Devanagari script.
-            language="en",
-            # Hint prompt biases Whisper toward the names and jargon
-            # that come up in this portfolio. Up to 244 tokens, must
-            # be in the target language. Improves recognition of
-            # 'Redwan', 'Erlangen', 'thesis', and ML acronyms.
+            # Hint prompt biases Whisper toward portfolio names and
+            # jargon. Improves recognition of 'Redwan', 'Erlangen',
+            # 'ChromaDB', 'LangChain', etc.
             prompt=(
                 "A spoken question about Md Redwan Hossain, an AI and "
                 "machine learning researcher who completed his M.Sc. in "
