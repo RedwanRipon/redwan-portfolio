@@ -43,6 +43,82 @@ reply is factual, not hallucinated.
 
 **Cost per voice question:** ~$0.005 (Whisper $0.0001 + agent $0.001 + TTS $0.003).
 
+## Tech stack — what each piece does and where it lives
+
+### Frontend — Next.js app (deployed on Vercel)
+
+| Tech | Where in the repo | What it does |
+| --- | --- | --- |
+| **Next.js 14 (App Router)** | `frontend/src/app/` | React framework. File-based routing (`page.tsx`, `layout.tsx`), server + client components, dynamic routes (`[slug]/page.tsx`), API routes (`api/*/route.ts`). |
+| **React 18** | every `.tsx` file | UI library. Hooks (`useState`, `useEffect`, `useRef`, `useMemo`) drive all interactivity. |
+| **TypeScript (strict)** | `tsconfig.json`, every `.ts(x)` | Static types end-to-end. Catches shape mismatches between the frontend's `ChatResponse` and the backend's Pydantic models. |
+| **TailwindCSS 3** | `tailwind.config.ts`, `globals.css`, every `className=` | Utility-first styling. Custom palette (`ink`, `gold`, `muted`), custom animations (`pop-in`, `orb-float`, `shimmer`), `dark:` modifier wired to the theme toggle. |
+| **Zustand** | `frontend/src/lib/store.ts` | Tiny global state store. Used for the `isRecording` flag the voice UI consults. |
+| **Framer Motion** | implicit via Tailwind `motion-safe:` classes + a few `useState`-driven CSS animations | Declarative animations. Currently doing most animation through Tailwind keyframes; Framer Motion is in deps for future expansion. |
+| **lucide-react** | every `import { ... } from 'lucide-react'` | Icon set — `Mic`, `Sparkles`, `Search`, `X`, `MapPin`, `ThumbsUp`, etc. SVG, tree-shakable. |
+| **next/font (Google Fonts)** | `app/layout.tsx` | Self-hosts Poppins (body) and Jost (display) so there's no FOUC and no third-party font CSS request. |
+| **next/image** | `About.tsx`, `/blogs/page.tsx`, `/travels/page.tsx` | Auto-optimized images (AVIF/WebP, responsive `srcset`, `priority` flag for LCP images). |
+| **next/navigation (`useRouter`)** | `ChatPanel.tsx`, `Navbar.tsx` | Programmatic navigation. After the agent picks a `route`, the chat panel calls `router.push(route)`. |
+| **Canvas API** | `components/ui/NeuralNetworkBackground.tsx` | AI/ML neural-network animation behind the Hero — drifting gold nodes, distance-faded violet edges, occasional synaptic "firing" pulses. ~60 nodes, O(n²) distance per frame at 60fps. |
+| **MediaDevices.getUserMedia** | `components/voice/ChatPanel.tsx` | Browser mic permission + audio stream. Triggers the OS-level "do you want to allow this site to use your mic" prompt. |
+| **MediaRecorder API** | `components/voice/ChatPanel.tsx` | Records the mic stream as a `Blob` (webm/opus on Chrome, mp4/aac on Safari). 30s cap. |
+| **HTMLAudioElement** | `components/voice/ChatPanel.tsx` | Plays the TTS reply. Source is a `data:audio/mpeg;base64,...` URL built from the backend's JSON response. |
+| **IntersectionObserver** | `components/layout/Navbar.tsx` | Scroll-spy. Watches the home section anchors so the navbar's active link highlights as you scroll. |
+| **localStorage** | `CommentSection.tsx`, `PostReactions.tsx`, `ThemeToggle.tsx` | Phase 1 persistence. Stores comments per blog/travel post, 👍/👎 votes per post, and the user's dark/light theme choice. |
+| **crypto.randomUUID** | `ChatPanel.tsx`, `CommentSection.tsx` | Generates short unique IDs for messages + comments without an extra `uuid` dep. |
+
+### Backend — FastAPI service (deployed on Render in Docker)
+
+| Tech | Where in the repo | What it does |
+| --- | --- | --- |
+| **Python 3.12** | `backend/Dockerfile`, `backend/app/` | Runtime. 3.12 chosen for stable wheels across the ML stack. |
+| **FastAPI** | `backend/app/main.py`, `backend/app/routes/*` | Async web framework. Auto-generates OpenAPI schema → Swagger UI at `/docs`. Dependency injection, typed handlers. |
+| **Uvicorn (`[standard]`)** | `Dockerfile` `CMD` line + local `uvicorn` command | ASGI server that actually runs FastAPI. `--reload` watches `.py` files during dev. |
+| **Pydantic 2.x** | `backend/app/schemas.py` | Runtime data validation. `ChatRequest`, `ChatResponse`, `VoiceResponse`, `HealthResponse` describe the JSON contract with the frontend. |
+| **pydantic-settings** | `backend/app/config.py` | Type-safe env loader. Reads `OPENAI_API_KEY`, `OPENAI_LLM_MODEL`, `CORS_ORIGINS`, etc. from env or `.env`. |
+| **python-dotenv** | implicit dep of pydantic-settings | Loads `backend/.env` into `os.environ` during local dev. |
+| **python-multipart** | implicit dep used by FastAPI's `UploadFile` | Parses `multipart/form-data` requests so `POST /voice/chat` can accept the browser's audio upload. |
+| **CORSMiddleware (built into FastAPI)** | `backend/app/main.py` | Adds `Access-Control-Allow-Origin` headers so the browser stops blocking cross-origin requests from Vercel to Render. |
+| **logging (stdlib)** | `routes/chat.py`, `routes/voice.py`, `services/*` | Structured logs to stderr — Render's log view streams these in real time. |
+
+### AI / RAG stack — the brain
+
+| Tech | Where in the repo | What it does |
+| --- | --- | --- |
+| **LangChain 1.x** | `backend/app/services/agent.py` | LLM orchestration framework. We use it for the tool-calling primitives (`@tool`, `ChatOpenAI.bind_tools`), but implement the tool-calling loop ourselves for clarity + version stability. |
+| **`langchain-openai`** | `services/agent.py`, `services/vector_store.py` | Wrappers around OpenAI's chat-completions and embeddings APIs — `ChatOpenAI`, `OpenAIEmbeddings`. |
+| **`langchain-chroma`** | `services/vector_store.py` | Adapter from LangChain `Document`s to ChromaDB. `Chroma(persist_directory=...)` connects to the on-disk vector store. |
+| **`langchain-core`** | imported everywhere | Stable interfaces — `Document`, `SystemMessage`, `HumanMessage`, `ToolMessage`, `AIMessage`, `@tool` decorator. |
+| **`langchain-text-splitters`** | `services/ingest.py` | `RecursiveCharacterTextSplitter` slices the CV into ~600-char chunks with 120-char overlap, preferring paragraph → sentence → word boundaries. |
+| **ChromaDB** | `backend/data/chroma_db/` + `services/vector_store.py` | Local persistent vector database (SQLite + HNSW binary index files). Stores chunk text + 1536-dim embeddings + metadata. ~1.2 MB on disk, committed to git so the Docker image ships with the index. |
+| **OpenAI Python SDK** | `services/agent.py`, `routes/voice.py` | Used both directly (Whisper, TTS) and indirectly via LangChain (chat + embeddings). |
+| **OpenAI Whisper (`whisper-1`)** | `routes/voice.py` — `client.audio.translations.create` | Speech-to-text. We use the **translate** task (not transcribe), which always outputs English regardless of detected source language — important for accented English speakers. |
+| **OpenAI Embeddings (`text-embedding-3-small`)** | `services/vector_store.py` | Converts CV chunks + each user query into 1536-dim vectors. Cosine distance over these vectors is how we find "relevant CV passages." |
+| **OpenAI Chat Completions (`gpt-4o-mini`)** | `services/agent.py` — `ChatOpenAI(model=...)` | The agent's reasoning LLM. Tool-calling, system-prompt steering, navigation decisions. Cheap (~$0.001 / query) and fast (~1-3 s). |
+| **OpenAI TTS (`tts-1`, voice `nova`)** | `routes/voice.py` — `client.audio.speech.create` | Text-to-speech. Returns mp3 bytes; we base64-encode them into the JSON response. |
+| **pypdf** | `services/ingest.py` | Pure-Python PDF text extraction. Reads the CV PDF page by page into plain text before chunking. |
+| **tiktoken** | implicit (used by OpenAI SDK for budget calculations) | OpenAI's tokenizer. Powers token-aware safety checks inside the SDK. |
+
+### Hosting + infrastructure
+
+| Tech | Where | What it does |
+| --- | --- | --- |
+| **Vercel** | `frontend/` | Frontend hosting + CDN + auto-deploy on `git push`. Free tier. |
+| **Render (Docker)** | `backend/Dockerfile` → `redwan-portfolio-yvrg.onrender.com` | Backend hosting. Builds the Dockerfile, exposes `$PORT`, restarts on every push. Free tier (sleeps after 15 min idle). |
+| **Docker** | `backend/Dockerfile`, `backend/.dockerignore` | Containerizes the backend. `python:3.12-slim` base, layered `COPY` for cache-friendly rebuilds, ChromaDB index baked into the image. |
+| **GitHub** | the repo | Source of truth + webhook target. Pushes to `main` trigger both Vercel and Render rebuilds. |
+| **Git** | local | Version control. Single `main` branch, no LFS (chroma_db is small enough to commit raw). |
+
+### Browser features we rely on (no library, just standards)
+
+| Feature | Where | What it does |
+| --- | --- | --- |
+| **`scroll-behavior: smooth`** + scroll-padding | `globals.css` | Smooth scroll between anchor sections without JS, accounting for the sticky navbar. |
+| **`prefers-color-scheme`** | `ThemeToggle.tsx` | Initial theme falls back to the OS preference when localStorage is empty. |
+| **`prefers-reduced-motion`** | `motion-safe:*` Tailwind variants | Animations are skipped for users who have OS-level reduced motion on. |
+| **`AbortSignal.timeout`** | `api/chat/route.ts`, `api/voice/route.ts` | 90s / 120s timeouts on upstream fetches so a hung backend doesn't hang the UI forever. |
+| **Backdrop blur** (`backdrop-filter`) | navbar, chat panel, voice pill | Frosted-glass look on top of the page content. |
+
 ## Build phases
 
 | Phase | Scope | Status |
