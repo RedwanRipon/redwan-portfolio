@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mic, Send, Sparkles, Square, X } from 'lucide-react';
+import { Mic, Sparkles, Square, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -16,35 +16,42 @@ interface Props {
   onClose: () => void;
 }
 
-// Starter prompts shown when the conversation is empty. Clicking one
-// fills the input + sends in one go so the user can start fast.
-const SUGGESTIONS = [
-  "What's Redwan's master thesis about?",
-  'Where did he study?',
-  'Tell me about his projects',
-];
-
 // Cap recordings to keep cost + latency sane. 30s is plenty for a
 // portfolio question.
 const MAX_RECORDING_MS = 30_000;
 
+/**
+ * Voice-only chat surface that floats above the orb.
+ *
+ * Flow:
+ *   1. User clicks the orb -> this panel opens.
+ *   2. User taps the mic -> MediaRecorder starts.
+ *   3. User taps the stop button (or the 30s cap fires).
+ *   4. Audio is uploaded to /api/voice -> FastAPI -> Whisper -> agent
+ *      -> OpenAI TTS -> JSON with transcript + speech + audio_b64.
+ *   5. Transcript shows as the user bubble, reply as the assistant
+ *      bubble, and the TTS mp3 plays automatically. The page also
+ *      auto-navigates to the route the agent picked.
+ *
+ * The text-input path was removed on purpose — this is the
+ * voice-driven portfolio after all. /api/chat still exists on the
+ * backend and can be reached programmatically; it just isn't wired
+ * to any UI here.
+ */
 export function ChatPanel({ open, onClose }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Recording state: 'idle' | 'recording' | 'processing'
   const [recState, setRecState] = useState<'idle' | 'recording' | 'processing'>(
     'idle',
   );
   const [recElapsedMs, setRecElapsedMs] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Refs for recording machinery so they survive across renders.
+  // Recording machinery — held in refs so they survive React re-renders.
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -53,25 +60,18 @@ export function ChatPanel({ open, onClose }: Props) {
   const maxRecordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  // Audio element used to play TTS replies. Kept as a single instance
-  // so we can stop the previous reply before playing a new one.
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
-  // Scroll to bottom whenever messages or busy state change so the
-  // latest message + the typing indicator stay in view.
+  // ------------------------------------------------------------------
+  // Side effects
+  // ------------------------------------------------------------------
+
+  // Scroll to the bottom whenever the message list / state changes.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, busy, recState]);
 
-  // Focus the input when the panel opens.
-  useEffect(() => {
-    if (open) {
-      const t = setTimeout(() => inputRef.current?.focus(), 80);
-      return () => clearTimeout(t);
-    }
-  }, [open]);
-
-  // Close on Escape key.
+  // Close on Escape.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -81,8 +81,8 @@ export function ChatPanel({ open, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  // If the panel closes mid-recording, tear everything down so the
-  // mic indicator in the browser tab doesn't keep showing.
+  // Tear everything down when the panel closes so the browser tab
+  // mic indicator doesn't keep spinning.
   useEffect(() => {
     if (!open) {
       cleanupRecording();
@@ -91,10 +91,11 @@ export function ChatPanel({ open, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  /** Smoothly route to the page the agent recommends. */
+  // ------------------------------------------------------------------
+  // Navigation helper
+  // ------------------------------------------------------------------
   function navigate(route: string | null | undefined) {
     if (!route) return;
-    // `/#anchor` — scroll within the home page.
     if (route.startsWith('/#')) {
       const id = route.slice(2);
       if (window.location.pathname === '/') {
@@ -108,58 +109,7 @@ export function ChatPanel({ open, onClose }: Props) {
   }
 
   // ------------------------------------------------------------------
-  // Text path (unchanged from before).
-  // ------------------------------------------------------------------
-  async function sendText(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || busy || recState !== 'idle') return;
-
-    const userMsg: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text: trimmed,
-    };
-    setMessages((m) => [...m, userMsg]);
-    setInput('');
-    setBusy(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error ?? `Server returned ${res.status}`);
-      }
-
-      const assistantMsg: Message = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: data.speech ?? '(no reply)',
-      };
-      setMessages((m) => [...m, assistantMsg]);
-
-      if (data.route) {
-        setTimeout(() => navigate(data.route), 600);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    sendText(input);
-  }
-
-  // ------------------------------------------------------------------
-  // Voice path: record, upload, play back.
+  // Voice recording
   // ------------------------------------------------------------------
 
   function isVoiceSupported(): boolean {
@@ -178,7 +128,10 @@ export function ChatPanel({ open, onClose }: Props) {
       clearTimeout(maxRecordingTimeoutRef.current);
       maxRecordingTimeoutRef.current = null;
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== 'inactive'
+    ) {
       try {
         mediaRecorderRef.current.stop();
       } catch {
@@ -224,8 +177,7 @@ export function ChatPanel({ open, onClose }: Props) {
     audioChunksRef.current = [];
 
     // Pick whichever container the browser supports. Safari prefers
-    // mp4/aac; Chrome/Firefox use webm/opus. Whisper accepts all of
-    // these, so we let the browser choose.
+    // mp4/aac; Chrome/Firefox use webm/opus. Whisper accepts them all.
     const candidates = [
       'audio/webm;codecs=opus',
       'audio/webm',
@@ -234,7 +186,9 @@ export function ChatPanel({ open, onClose }: Props) {
     ];
     const mime = candidates.find((c) => MediaRecorder.isTypeSupported(c)) ?? '';
 
-    const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const recorder = mime
+      ? new MediaRecorder(stream, { mimeType: mime })
+      : new MediaRecorder(stream);
     mediaRecorderRef.current = recorder;
 
     recorder.ondataavailable = (e) => {
@@ -284,7 +238,6 @@ export function ChatPanel({ open, onClose }: Props) {
     try {
       mediaRecorderRef.current?.stop();
     } catch {
-      // recorder.onstop will not fire — fall back to manual cleanup.
       setRecState('idle');
       setError('Recording stopped unexpectedly.');
     }
@@ -305,14 +258,20 @@ export function ChatPanel({ open, onClose }: Props) {
         throw new Error(data.error ?? `Server returned ${res.status}`);
       }
 
-      // Display transcript as user message + reply as assistant.
       setMessages((m) => [
         ...m,
-        { id: crypto.randomUUID(), role: 'user', text: data.transcript ?? '(silence)' },
-        { id: crypto.randomUUID(), role: 'assistant', text: data.speech ?? '(no reply)' },
+        {
+          id: crypto.randomUUID(),
+          role: 'user',
+          text: data.transcript ?? '(silence)',
+        },
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          text: data.speech ?? '(no reply)',
+        },
       ]);
 
-      // Play the TTS audio.
       if (data.audio_b64) {
         playAudioFromBase64(data.audio_b64, data.audio_mime ?? 'audio/mpeg');
       }
@@ -335,7 +294,7 @@ export function ChatPanel({ open, onClose }: Props) {
     const audio = new Audio(src);
     audioPlayerRef.current = audio;
     void audio.play().catch(() => {
-      /* autoplay blocked — user can click the assistant message later */
+      /* autoplay blocked — user can still read the transcript / reply */
     });
   }
 
@@ -344,6 +303,17 @@ export function ChatPanel({ open, onClose }: Props) {
   const recording = recState === 'recording';
   const processing = recState === 'processing';
   const recSeconds = (recElapsedMs / 1000).toFixed(1);
+
+  // Pick the right status / instruction line under the mic.
+  const status = recording
+    ? `Listening… ${recSeconds}s`
+    : processing
+      ? 'Processing…'
+      : busy
+        ? 'Thinking…'
+        : messages.length === 0
+          ? 'Tap the mic and ask anything'
+          : 'Tap the mic to ask again';
 
   return (
     <div
@@ -360,7 +330,9 @@ export function ChatPanel({ open, onClose }: Props) {
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles size={15} className="text-violet-400" />
-          <h3 className="font-display text-sm font-semibold text-white">Ask Redwan AI</h3>
+          <h3 className="font-display text-sm font-semibold text-white">
+            Ask Redwan AI
+          </h3>
         </div>
         <button
           type="button"
@@ -374,25 +346,16 @@ export function ChatPanel({ open, onClose }: Props) {
 
       {/* Messages area */}
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && !busy && !error && !recording && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <Sparkles size={28} className="text-violet-400/70" />
-            <p className="max-w-[240px] text-sm text-muted">
-              Type or hit the mic — ask anything about Redwan&apos;s work,
-              education, or projects.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 px-2">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => sendText(s)}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-muted transition hover:border-violet-400/40 hover:text-white"
-                >
-                  {s}
-                </button>
-              ))}
+        {messages.length === 0 && !busy && !error && !recording && !processing && (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+            <div className="relative">
+              <Sparkles size={32} className="text-violet-400/70" />
+              <span className="absolute -inset-3 rounded-full bg-violet-500/20 blur-2xl" />
             </div>
+            <p className="max-w-[240px] text-sm leading-relaxed text-muted">
+              Ask anything about Redwan&apos;s work, education, or projects —
+              <span className="text-white"> just talk</span>.
+            </p>
           </div>
         )}
 
@@ -410,7 +373,7 @@ export function ChatPanel({ open, onClose }: Props) {
           </div>
         ))}
 
-        {busy && (
+        {busy && !processing && (
           <div className="mr-auto flex items-center gap-1.5 rounded-2xl border border-white/10 bg-ink/60 px-3 py-2.5">
             <span
               className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400"
@@ -437,61 +400,51 @@ export function ChatPanel({ open, onClose }: Props) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Recording status bar (only while recording) */}
-      {recording && (
-        <div className="flex items-center gap-2 border-t border-white/10 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">
-          <span className="relative inline-flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400/70" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
-          </span>
-          <span className="font-medium">Listening…</span>
-          <span className="ml-auto tabular-nums opacity-70">{recSeconds}s</span>
-        </div>
-      )}
-
-      {/* Input + mic + send */}
-      <form
-        onSubmit={onSubmit}
-        className="flex items-center gap-2 border-t border-white/10 p-3"
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={recording ? 'Listening to your voice…' : 'Ask anything…'}
-          disabled={busy || recording || processing}
-          className="flex-1 rounded-full border border-white/10 bg-ink px-4 py-2 text-sm text-white placeholder:text-muted/70 focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-400/30 disabled:opacity-60"
-        />
-
-        {/* Mic / Stop button */}
-        <button
-          type="button"
-          onClick={recording ? stopRecording : startRecording}
-          disabled={busy && !recording}
-          aria-label={recording ? 'Stop recording' : 'Record voice question'}
-          title={recording ? 'Stop recording' : 'Hold to record'}
+      {/* Mic dock — replaces the old text input + send buttons */}
+      <div className="border-t border-white/10 bg-ink-card/80 px-4 py-4">
+        <p
           className={cn(
-            'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-md transition active:scale-95',
-            recording
-              ? 'bg-rose-500 !text-white hover:bg-rose-400'
-              : 'border border-white/15 text-white hover:border-violet-400/60 hover:text-violet-300',
-            !recording && busy && 'cursor-not-allowed opacity-50',
+            'mb-3 text-center text-xs',
+            recording ? 'font-medium text-rose-300' : 'text-muted',
           )}
         >
-          {recording ? <Square size={14} fill="currentColor" /> : <Mic size={15} />}
-        </button>
+          {recording && (
+            <span className="relative mr-2 inline-flex h-2 w-2 align-middle">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400/70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+            </span>
+          )}
+          {status}
+        </p>
 
-        {/* Send button */}
-        <button
-          type="submit"
-          disabled={!input.trim() || busy || recording || processing}
-          aria-label="Send"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 !text-white shadow-md transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-white/10 disabled:!text-muted"
-        >
-          <Send size={14} />
-        </button>
-      </form>
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={recording ? stopRecording : startRecording}
+            disabled={processing || (busy && !recording)}
+            aria-label={recording ? 'Stop recording' : 'Start recording'}
+            title={recording ? 'Tap to send' : 'Tap to record'}
+            className={cn(
+              'relative inline-flex h-16 w-16 items-center justify-center rounded-full shadow-2xl transition active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink',
+              recording
+                ? 'bg-rose-500 !text-white hover:bg-rose-400'
+                : 'bg-gradient-to-br from-violet-500 to-fuchsia-700 !text-white hover:scale-105 hover:from-violet-400 hover:to-fuchsia-600',
+              (processing || (busy && !recording)) &&
+                'cursor-not-allowed opacity-60',
+            )}
+          >
+            {/* Pulse ring when recording */}
+            {recording && (
+              <span className="absolute inset-0 animate-ping rounded-full bg-rose-500/40" />
+            )}
+            {recording ? (
+              <Square size={22} fill="currentColor" />
+            ) : (
+              <Mic size={24} />
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
