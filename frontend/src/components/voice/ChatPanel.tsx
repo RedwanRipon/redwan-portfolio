@@ -62,6 +62,13 @@ export function ChatPanel({ open, onClose }: Props) {
   );
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
+  // Web Audio API context — used for iOS-compatible playback.
+  // iOS Safari blocks Audio.play() unless triggered from a user gesture.
+  // We "unlock" the AudioContext during the mic tap (user gesture) so
+  // playback works later when the TTS response arrives.
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
   // ------------------------------------------------------------------
   // Side effects
   // ------------------------------------------------------------------
@@ -144,11 +151,38 @@ export function ChatPanel({ open, onClose }: Props) {
   }
 
   function stopAudioPlayback() {
+    // Stop Web Audio API source (iOS path)
+    if (audioSourceRef.current) {
+      try { audioSourceRef.current.stop(); } catch { /* already stopped */ }
+      audioSourceRef.current = null;
+    }
+    // Stop HTML Audio element (non-iOS fallback)
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       audioPlayerRef.current.src = '';
       audioPlayerRef.current = null;
     }
+  }
+
+  /**
+   * Unlock the Web AudioContext during a user gesture (tap/click).
+   * iOS Safari requires this — an AudioContext created or resumed
+   * outside a gesture handler will stay in 'suspended' state forever.
+   */
+  function unlockAudioContext() {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') {
+      void ctx.resume();
+    }
+    // Play a silent buffer to fully unlock on iOS.
+    const silent = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = silent;
+    src.connect(ctx.destination);
+    src.start(0);
   }
 
   async function startRecording() {
@@ -160,6 +194,10 @@ export function ChatPanel({ open, onClose }: Props) {
 
     setError(null);
     stopAudioPlayback();
+
+    // Unlock AudioContext during this user gesture so iOS allows
+    // playback later when the TTS audio arrives.
+    unlockAudioContext();
 
     let stream: MediaStream;
     try {
@@ -291,10 +329,53 @@ export function ChatPanel({ open, onClose }: Props) {
 
   function playAudioFromBase64(b64: string, mime: string) {
     stopAudioPlayback();
-    const src = `data:${mime};base64,${b64}`;
-    const audio = new Audio(src);
+
+    // Convert base64 to ArrayBuffer.
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const arrayBuffer = bytes.buffer;
+
+    // Try Web Audio API first (works on iOS after unlockAudioContext).
+    const ctx = audioCtxRef.current;
+    if (ctx && ctx.state === 'running') {
+      ctx.decodeAudioData(
+        arrayBuffer.slice(0),  // decodeAudioData detaches the buffer, so pass a copy
+        (audioBuffer) => {
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(ctx.destination);
+          source.start(0);
+          audioSourceRef.current = source;
+        },
+        () => {
+          // Decoding failed — fall back to HTML Audio.
+          playWithHtmlAudio(b64, mime);
+        },
+      );
+    } else {
+      // AudioContext not available or suspended — use HTML Audio.
+      playWithHtmlAudio(b64, mime);
+    }
+  }
+
+  /** Fallback: HTML Audio element (works on Chrome/Firefox/Android). */
+  function playWithHtmlAudio(b64: string, mime: string) {
+    // Use a Blob URL instead of a data URL — more reliable across browsers.
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
     audioPlayerRef.current = audio;
+    audio.onended = () => URL.revokeObjectURL(url);
     void audio.play().catch(() => {
+      URL.revokeObjectURL(url);
       /* autoplay blocked — user can still read the transcript / reply */
     });
   }
