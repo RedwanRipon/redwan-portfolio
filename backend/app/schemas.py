@@ -37,6 +37,9 @@ class ChatResponse(BaseModel):
 class VoiceResponse(BaseModel):
     """Voice-chat reply. Same fields as ChatResponse plus the heard
     transcript and the synthesized audio.
+
+    audio_b64 / audio_mime are optional — when the client wants to
+    minimise latency it can fetch TTS separately via POST /voice/tts.
     """
 
     transcript: str = Field(
@@ -55,14 +58,34 @@ class VoiceResponse(BaseModel):
         default=None,
         description="Optional DOM id to spotlight after navigation.",
     )
+    audio_b64: Optional[str] = Field(
+        default=None,
+        description="Base64-encoded TTS audio (mp3 by default). "
+        "Omitted when the client fetches TTS separately.",
+    )
+    audio_mime: Optional[str] = Field(
+        default=None,
+        description="MIME type matching audio_b64. The frontend uses this "
+        "to construct a data: URL or Blob for playback.",
+    )
+
+
+class TtsRequest(BaseModel):
+    """Request body for the standalone TTS endpoint."""
+
+    text: str = Field(..., min_length=1, max_length=4000)
+
+
+class TtsResponse(BaseModel):
+    """Response from the standalone TTS endpoint."""
+
     audio_b64: str = Field(
         ...,
-        description="Base64-encoded TTS audio (mp3 by default).",
+        description="Base64-encoded TTS audio (mp3).",
     )
     audio_mime: str = Field(
         default="audio/mpeg",
-        description="MIME type matching audio_b64. The frontend uses this "
-        "to construct a data: URL or Blob for playback.",
+        description="MIME type matching audio_b64.",
     )
 
 

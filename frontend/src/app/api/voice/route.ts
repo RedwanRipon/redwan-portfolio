@@ -10,10 +10,9 @@ import { NextResponse } from 'next/server';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
-// Voice round trip is heavier than text. Whisper + agent + TTS easily
-// runs 5-15s, and Render free-tier cold starts add another ~30s on
-// top. 120s budget covers both.
-const VOICE_TIMEOUT_MS = 120_000;
+// STT + agent + TTS typically takes 4-6s. Render free-tier cold starts
+// can add ~30s, so 90s covers the worst case.
+const VOICE_TIMEOUT_MS = 90_000;
 
 export const dynamic = 'force-dynamic';
 

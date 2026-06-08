@@ -1,228 +1,152 @@
 """The agent — turns a user question into a spoken reply + nav hint.
 
-Design notes
-------------
-We deliberately avoid `langchain.agents` / LangGraph helpers here so the
-code stays version-proof and easy to read. Instead we implement the
-classic tool-calling loop ourselves:
+Design: single-LLM-call with JSON structured output
+----------------------------------------------------
+No tool-calling loop. The LLM returns a JSON object with speech + route
+in a single call. RAG context is pre-fetched and injected into the
+system prompt. This is the fastest possible architecture:
 
-    1. Send the conversation (system + user) to the LLM, with the two
-       tools attached.
-    2. If the LLM responds with tool calls, run them, append results
-       to the conversation, and loop.
-    3. If the LLM responds with plain content (no more tool calls),
-       that's the spoken reply — return it.
+  1. Vector search (~0.1-0.5s warm)
+  2. One LLM call (~1-2s)
+  3. JSON parse (instant)
 
-Two tools the LLM can call:
-    - search_cv_tool   : RAG over the CV vector store (Step 2).
-    - navigation_tool  : declares which page the frontend should
-                         navigate to + which element to highlight.
-                         The "return value" of this tool is symbolic;
-                         what matters is that the LLM called it with
-                         specific arguments — we extract those args
-                         and surface them in the HTTP response.
+Total agent time: ~1.5-2.5s (warm).
 """
+import functools
+import json
+import logging
+import re
+import time
 from typing import Optional
 
-from langchain_core.messages import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage,
-    ToolMessage,
-)
-from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
+from openai import OpenAI
 
 from app.config import settings
 from app.schemas import ChatResponse
 from app.services.vector_store import search
 
+log = logging.getLogger(__name__)
+
 
 # ----------------------------------------------------------------------
-# Tools
+# Cached client
 # ----------------------------------------------------------------------
 
-@tool
-def search_cv_tool(query: str) -> str:
-    """Search Md Redwan Hossain's CV for information relevant to the
-    query. Use this whenever the user asks about Redwan's background,
-    education, experience, master's thesis, projects, publications,
-    skills, or languages. The query should be a short phrase
-    describing what you're looking for (e.g. 'master thesis',
-    'web developer experience', 'machine learning projects')."""
-    hits = search(query, k=4)
-    if not hits:
-        return "No relevant information found in the CV."
-    # Join hits with a clear separator so the LLM can tell them apart.
-    return "\n\n---\n\n".join(content for content, _ in hits)
-
-
-@tool
-def navigation_tool(route: str, highlight_id: Optional[str] = None) -> str:
-    """Tell the frontend which page to navigate to AND, optionally,
-    which element to spotlight. Call this once per reply when a
-    specific page would help the user see what you're talking about.
-
-    Available routes (use the SAME values; the frontend matches them):
-      /            home (top of the page)
-      /#about      About section on the home page
-      /#expertise  Expertise tiles on the home page
-      /#portfolio  Project cards on the home page
-      /#resume     Resume timeline on the home page (CV, education, experience)
-      /#blog       Latest blog posts (home preview)
-      /#travel     Latest travel posts (home preview)
-      /#contact    Contact form on the home page
-      /blogs       Full blog listing page
-      /travels     Full travel listing page
-
-    If the question is generic and no specific page applies, you can
-    skip calling this tool.
-    """
-    suffix = f" (highlight: {highlight_id})" if highlight_id else ""
-    return f"Acknowledged — frontend will navigate to {route}{suffix}."
+@functools.lru_cache(maxsize=1)
+def _get_openai_client() -> OpenAI:
+    """Raw OpenAI client — reuses HTTP connection pool across requests."""
+    return OpenAI(api_key=settings.openai_api_key)
 
 
 # ----------------------------------------------------------------------
 # System prompt
 # ----------------------------------------------------------------------
 
-SYSTEM_PROMPT = """You are the AI voice assistant on Md Redwan Hossain's
-personal portfolio website. Your job is to answer questions about
-Redwan using the tools you have.
+SYSTEM_PROMPT_TEMPLATE = """You are the AI voice assistant on Md Redwan Hossain's
+personal portfolio website. Answer questions about Redwan using the
+context below.
 
-Always use search_cv_tool first for any question about Redwan's
-background. Never invent facts. If the tool returns nothing relevant,
-say so honestly.
+=== CV CONTEXT (from vector search) ===
+{cv_context}
+=== END CV CONTEXT ===
 
-Hard facts about Redwan (override anything in the CV that contradicts):
+Hard facts (override anything in the context that contradicts):
 - He COMPLETED his M.Sc. in Data Science (Major: ML & AI) at the
-  University of Erlangen-Nuremberg in May 2026. The Master's is
-  FINISHED, not ongoing.
+  University of Erlangen-Nuremberg in May 2026. FINISHED, not ongoing.
 - He COMPLETED his B.Sc. in Computer Science & Engineering at
   Southeast University, Bangladesh, in January 2020.
 - His master's thesis was on integrated charging-aware mixed-fleet
   scheduling for electric and conventional buses, using Python,
   Pyomo, and Gurobi.
 
-Tense rules (IMPORTANT):
-- ALWAYS speak about the Master's and Bachelor's in PAST TENSE:
-  "Redwan earned his M.Sc. in 2026" / "he holds a Master's", NOT
-  "he is pursuing" or "he is currently studying".
-- Same for his thesis: "his thesis was on…" / "he worked on…",
-  not "his thesis is about…".
+Tense rules:
+- ALWAYS use PAST TENSE for degrees: "Redwan earned…" / "he holds…"
+- Same for thesis: "his thesis was on…" / "he worked on…"
 
-Ordering rules (IMPORTANT):
-- When listing degrees, jobs, projects, or anything time-ordered,
-  ALWAYS lead with the most recent and highest item first, then go
-  backwards.
-  Example: ask about education -> mention the Master's at Erlangen
-  FIRST, then the Bachelor's at Southeast University.
-  Example: ask about experience -> mention the Master Thesis role
-  FIRST, then the older web-development jobs.
-- The CV's section order is not chronological. Reorder it yourself.
+Ordering: lead with the most recent item first.
 
 Tone:
-- Replies will be SPOKEN ALOUD by text-to-speech, so keep them to
-  1 - 2 short sentences. No bullet points, no markdown, no headings.
-- Conversational, friendly, and natural — like a smart friend
-  describing Redwan.
-- Refer to Redwan as "Redwan" or "he", never as "I". You are the
-  assistant, not Redwan himself.
-- Don't say things like "let's check it out" or "click here" — the
-  navigation happens silently when you call navigation_tool, the
-  user doesn't need to be told.
+- Replies will be SPOKEN ALOUD by TTS. Keep to 1-2 short sentences.
+- No bullet points, no markdown, no headings, no emojis.
+- Conversational, friendly, natural.
+- Refer to Redwan as "Redwan" or "he", never "I".
 
-Navigation rules (IMPORTANT):
-- ALWAYS call navigation_tool on EVERY reply about Redwan, picking
-  the most relevant route from the list. Do NOT just mention going
-  somewhere in the speech — actually call the tool.
-- Map of topics -> routes:
-    education / thesis / experience / publications / skills -> /#resume
-    projects / portfolio                                    -> /#portfolio
-    focus areas / what he does                              -> /#expertise
-    bio / who is he                                         -> /#about
-    blog / writing                                          -> /#blog or /blogs
-    travel / cities visited                                 -> /#travel or /travels
-    get in touch / contact / hire                           -> /#contact
-- Only skip navigation_tool for truly off-topic questions.
+You MUST respond with a JSON object in this exact format:
+{{
+  "speech": "Your spoken reply here",
+  "route": "/#section"
+}}
 
-Off-topic questions (weather, politics, random trivia): politely say
-you can only answer questions about Redwan's work."""
+Route must be one of these values based on the topic:
+  education / thesis / experience / skills -> "/#resume"
+  projects / portfolio                     -> "/#portfolio"
+  focus areas / what he does               -> "/#expertise"
+  bio / who is he                          -> "/#about"
+  blog / writing                           -> "/#blog"
+  travel / cities                          -> "/#travel"
+  contact / hire                           -> "/#contact"
+  off-topic / greeting                     -> null
 
-
-# ----------------------------------------------------------------------
-# The agent
-# ----------------------------------------------------------------------
-
-MAX_LOOPS = 5  # safety cap so we never spin forever
+If the context doesn't help, say so honestly in speech.
+Off-topic questions: speech should politely say you only know about Redwan."""
 
 
 def run_agent(user_message: str) -> ChatResponse:
-    """Run one chat turn. Returns a ChatResponse with speech + nav info."""
-    # 1. LLM with tools attached. bind_tools() teaches the LLM about the
-    #    function names + arg schemas (built from the @tool docstrings).
-    llm = ChatOpenAI(
-        api_key=settings.openai_api_key,
-        model=settings.openai_llm_model,
-        temperature=0.2,  # low temp = focused, factual replies
+    """Single LLM call. Returns ChatResponse with speech + route."""
+    t0 = time.perf_counter()
+    client = _get_openai_client()
+
+    # 1. Pre-fetch RAG context.
+    t_rag = time.perf_counter()
+    hits = search(user_message, k=4)
+    cv_context = (
+        "\n\n---\n\n".join(content for content, _ in hits)
+        if hits
+        else "No relevant information found."
     )
-    tools_by_name = {
-        "search_cv_tool": search_cv_tool,
-        "navigation_tool": navigation_tool,
-    }
-    llm_with_tools = llm.bind_tools(list(tools_by_name.values()))
+    log.info(
+        "[agent] RAG search took %.2fs (%d hits)",
+        time.perf_counter() - t_rag,
+        len(hits),
+    )
 
-    # 2. Seed conversation.
-    messages = [
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=user_message),
-    ]
+    # 2. Single LLM call with JSON output.
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(cv_context=cv_context)
 
-    # 3. Tool-calling loop. We capture the latest navigation hint from
-    #    any navigation_tool call so we can surface it in the response.
+    t_llm = time.perf_counter()
+    response = client.chat.completions.create(
+        model=settings.openai_llm_model,
+        temperature=0.2,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
+        response_format={"type": "json_object"},
+    )
+    log.info("[agent] LLM call took %.2fs", time.perf_counter() - t_llm)
+
+    # 3. Parse the JSON response.
+    raw = (response.choices[0].message.content or "").strip()
+    speech = "I'm not sure how to answer that — try asking about Redwan's work or background."
     nav_route: Optional[str] = None
-    nav_highlight: Optional[str] = None
-    response: AIMessage = AIMessage(content="")  # placeholder for the typechecker
 
-    for _ in range(MAX_LOOPS):
-        response = llm_with_tools.invoke(messages)
-        messages.append(response)
+    try:
+        data = json.loads(raw)
+        speech = data.get("speech", speech)
+        nav_route = data.get("route")
+    except (json.JSONDecodeError, AttributeError):
+        # If JSON parsing fails, use the raw text as speech.
+        log.warning("[agent] Failed to parse JSON, using raw: %r", raw[:100])
+        if raw:
+            # Try to salvage — strip any JSON artifacts.
+            cleaned = re.sub(r'[{}"\[\]]', '', raw).strip()
+            if cleaned:
+                speech = cleaned
 
-        # Done? (LLM gave a plain reply with no more tool calls)
-        if not response.tool_calls:
-            break
-
-        # Run each requested tool call and feed the results back in.
-        for call in response.tool_calls:
-            name = call["name"]
-            args = call["args"]
-
-            # Capture nav hint regardless of what the tool "returns".
-            if name == "navigation_tool":
-                nav_route = args.get("route")
-                nav_highlight = args.get("highlight_id")
-
-            tool_fn = tools_by_name.get(name)
-            if tool_fn is None:
-                tool_output = f"Unknown tool: {name}"
-            else:
-                try:
-                    tool_output = tool_fn.invoke(args)
-                except Exception as exc:  # noqa: BLE001
-                    tool_output = f"Tool error: {exc}"
-
-            messages.append(
-                ToolMessage(content=str(tool_output), tool_call_id=call["id"])
-            )
-
-    # 4. Extract the spoken reply from the last AI message.
-    speech = (response.content or "").strip()
-    if not speech:
-        # Fallback if the model returned only tool calls and never spoke.
-        speech = "I'm not sure how to answer that — try asking about Redwan's work or background."
+    log.info("[agent] total run_agent took %.2fs", time.perf_counter() - t0)
 
     return ChatResponse(
         speech=speech,
         route=nav_route,
-        highlight_id=nav_highlight,
+        highlight_id=None,
     )

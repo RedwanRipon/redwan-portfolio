@@ -258,6 +258,7 @@ export function ChatPanel({ open, onClose }: Props) {
         throw new Error(data.error ?? `Server returned ${res.status}`);
       }
 
+      // Show text bubbles + play audio simultaneously.
       setMessages((m) => [
         ...m,
         {
