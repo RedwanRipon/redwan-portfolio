@@ -19,6 +19,23 @@ class Settings(BaseSettings):
     chroma_dir: str = "./data/chroma_db"
     sources_dir: str = "./data/sources"
 
+    # --- Database (Phase 4) ---
+    # Full SQLAlchemy URL.
+    # Local dev fallback uses SQLite so the backend boots without a
+    # real DB. Set DATABASE_URL in .env (or on Render) to a Neon
+    # Postgres URL for production:
+    #   postgresql+psycopg://user:pwd@ep-xxx.neon.tech/dbname?sslmode=require
+    database_url: str = "sqlite:///./local.db"
+
+    # --- Admin auth (Phase 4) ---
+    # Password gate for /admin/* endpoints.
+    admin_password: str = ""
+    # Secret for signing the admin session JWT cookie. Any random
+    # 32+ char string; regenerate to invalidate all sessions.
+    jwt_secret: str = "change-me-in-production-please"
+    # Admin session lifetime in hours.
+    jwt_ttl_hours: int = 24
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

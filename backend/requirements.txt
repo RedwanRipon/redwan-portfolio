@@ -25,3 +25,14 @@ pypdf>=4.3
 # FastAPI needs python-multipart to parse multipart/form-data (used by
 # the /voice/chat endpoint when the browser uploads recorded audio).
 python-multipart>=0.0.9
+
+# --- Database (Phase 4): SQLModel ORM + Postgres driver ---
+# sqlmodel = Pydantic + SQLAlchemy combined, written by FastAPI's
+# author. psycopg[binary] is the pure-Python Postgres driver — the
+# [binary] extra ships prebuilt wheels so Render doesn't need libpq
+# system packages.
+sqlmodel>=0.0.22
+psycopg[binary]>=3.2
+
+# --- Admin auth (Phase 4): JWT signing for cookie sessions ---
+PyJWT>=2.9
