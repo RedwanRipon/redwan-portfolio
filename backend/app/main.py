@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routes import chat, comments, contact, health, reactions, voice
+from app.routes import admin, chat, comments, contact, health, reactions, voice
 
 app = FastAPI(
     title="Redwan Portfolio Agent",
@@ -37,3 +37,4 @@ app.include_router(voice.router)
 app.include_router(comments.router)
 app.include_router(reactions.router)
 app.include_router(contact.router)
+app.include_router(admin.router)
