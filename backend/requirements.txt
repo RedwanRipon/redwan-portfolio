@@ -36,3 +36,8 @@ psycopg[binary]>=3.2
 
 # --- Admin auth (Phase 4): JWT signing for cookie sessions ---
 PyJWT>=2.9
+
+# --- Contact form (Phase 4): Pydantic EmailStr field type ---
+# Required for `from pydantic import EmailStr` to work — Pydantic v2
+# doesn't bundle email parsing by default.
+email-validator>=2.0
