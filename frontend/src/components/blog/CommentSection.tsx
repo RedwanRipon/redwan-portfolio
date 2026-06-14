@@ -1,42 +1,59 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Send, X } from 'lucide-react';
+import {
+  fetchComments,
+  postComment,
+  type CommentRead,
+  type PostType,
+} from '@/lib/api';
 
-interface CommentItem {
-  id: string;
-  name: string;
-  text: string;
-  createdAt: number;
+interface Props {
+  postType: PostType;
+  postSlug: string;
 }
+
+const PREVIEW_COUNT = 3;
 
 /**
  * Sticky right rail on the post detail page — name + comment + send.
  *
- * Only the most recent comment is shown inline (chat-style preview).
- * When there are more, a "See all comments" link opens a modal that
- * lists every comment. Persisted to localStorage at `comments:<slug>`.
+ * Phase 4: backed by the FastAPI /comments endpoint via the Next.js
+ * /api/comments proxy. Comments are global — every visitor sees the
+ * same list.
  */
-export function CommentSection({ slug }: { slug: string }) {
-  const storageKey = `comments:${slug}`;
+export function CommentSection({ postType, postSlug }: Props) {
+  const [comments, setComments] = useState<CommentRead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [comments, setComments] = useState<CommentItem[]>([]);
   const [name, setName] = useState('');
   const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Hydrate from localStorage on mount.
-  useEffect(() => {
+  const refresh = useCallback(async () => {
+    setError(null);
     try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setComments(JSON.parse(raw));
-    } catch {
-      /* ignore */
+      const list = await fetchComments(postType, postSlug);
+      setComments(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load comments.');
+    } finally {
+      setLoading(false);
     }
-  }, [storageKey]);
+  }, [postType, postSlug]);
 
-  // Lock body scroll + listen for Escape while the modal is open.
+  // Initial load + on slug change.
+  useEffect(() => {
+    setLoading(true);
+    refresh();
+  }, [refresh]);
+
+  // Lock body scroll + Esc to close while the modal is open.
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -51,42 +68,42 @@ export function CommentSection({ slug }: { slug: string }) {
     };
   }, [modalOpen]);
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
     const trimmedText = text.trim();
-    if (!trimmedName || !trimmedText) return;
-    const next: CommentItem = {
-      id:
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      name: trimmedName,
-      text: trimmedText,
-      createdAt: Date.now(),
-    };
-    const updated = [next, ...comments];
-    setComments(updated);
+    if (!trimmedName || !trimmedText || sending) return;
+
+    setSending(true);
+    setError(null);
     try {
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch {
-      /* ignore */
+      const created = await postComment({
+        postType,
+        postSlug,
+        authorName: trimmedName,
+        text: trimmedText,
+      });
+      // Newest-first; optimistic prepend so the user sees it instantly.
+      setComments((prev) => [created, ...prev]);
+      setName('');
+      setText('');
+      setSent(true);
+      setTimeout(() => setSent(false), 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not post comment.');
+    } finally {
+      setSending(false);
     }
-    setName('');
-    setText('');
-    setSent(true);
-    setTimeout(() => setSent(false), 2500);
   };
 
-  function relative(ts: number) {
-    const sec = Math.floor((Date.now() - ts) / 1000);
+  function relative(iso: string) {
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
     if (sec < 60) return 'just now';
     if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
     if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
     return `${Math.floor(sec / 86400)}d ago`;
   }
 
-  const PREVIEW_COUNT = 3;
   const hasComments = comments.length > 0;
   const preview = comments.slice(0, PREVIEW_COUNT);
   const remaining = Math.max(0, comments.length - PREVIEW_COUNT);
@@ -94,11 +111,15 @@ export function CommentSection({ slug }: { slug: string }) {
   return (
     <>
       <div className="rounded-2xl border border-white/10 bg-ink-card p-5">
-        <h3 className="mb-1 font-display text-base font-semibold text-white">Comments</h3>
+        <h3 className="mb-1 font-display text-base font-semibold text-white">
+          Comments
+        </h3>
         <p className="mb-5 text-xs text-muted">
-          {hasComments
-            ? `${comments.length} comment${comments.length === 1 ? '' : 's'} so far. Add yours below.`
-            : 'No comments yet — be the first to leave a thought.'}
+          {loading
+            ? 'Loading comments…'
+            : hasComments
+              ? `${comments.length} comment${comments.length === 1 ? '' : 's'} so far. Add yours below.`
+              : 'No comments yet — be the first to leave a thought.'}
         </p>
 
         {/* Latest few comments (preview) + 'see all' link */}
@@ -112,10 +133,10 @@ export function CommentSection({ slug }: { slug: string }) {
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="font-display text-sm font-semibold text-white">
-                      {c.name}
+                      {c.author_name}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">
-                      {relative(c.createdAt)}
+                      {relative(c.created_at)}
                     </p>
                   </div>
                   <p className="mt-1 whitespace-pre-line text-sm text-muted">
@@ -148,7 +169,9 @@ export function CommentSection({ slug }: { slug: string }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            className="w-full rounded-md border border-white/10 bg-ink px-3 py-2 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
+            disabled={sending}
+            maxLength={80}
+            className="w-full rounded-md border border-white/10 bg-ink px-3 py-2 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 disabled:opacity-60"
           />
           <textarea
             required
@@ -156,15 +179,24 @@ export function CommentSection({ slug }: { slug: string }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Write a comment…"
-            className="w-full resize-y rounded-md border border-white/10 bg-ink px-3 py-2 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
+            disabled={sending}
+            maxLength={2000}
+            className="w-full resize-y rounded-md border border-white/10 bg-ink px-3 py-2 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 disabled:opacity-60"
           />
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gold px-4 py-2 font-display text-xs font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition hover:bg-gold-dark hover:shadow-gold-lg active:scale-[0.98] dark:!text-neutral-900"
+            disabled={sending || !name.trim() || !text.trim()}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gold px-4 py-2 font-display text-xs font-semibold uppercase tracking-widest !text-white shadow-gold-sm transition hover:bg-gold-dark hover:shadow-gold-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:!text-neutral-900"
           >
             <Send size={13} />
-            {sent ? 'Sent!' : 'Send'}
+            {sending ? 'Sending…' : sent ? 'Sent!' : 'Send'}
           </button>
+
+          {error && (
+            <p className="text-xs text-rose-300" role="alert">
+              {error}
+            </p>
+          )}
         </form>
       </div>
 
@@ -176,7 +208,6 @@ export function CommentSection({ slug }: { slug: string }) {
           aria-label="All comments"
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
-          {/* Backdrop */}
           <button
             type="button"
             aria-label="Close"
@@ -184,7 +215,6 @@ export function CommentSection({ slug }: { slug: string }) {
             className="absolute inset-0 bg-black/65 backdrop-blur-sm"
           />
 
-          {/* Panel */}
           <div className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink-card shadow-2xl motion-safe:animate-pop-in">
             <header className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <h3 className="font-display text-base font-semibold text-white">
@@ -208,10 +238,10 @@ export function CommentSection({ slug }: { slug: string }) {
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="font-display text-sm font-semibold text-white">
-                      {c.name}
+                      {c.author_name}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">
-                      {relative(c.createdAt)}
+                      {relative(c.created_at)}
                     </p>
                   </div>
                   <p className="mt-1 whitespace-pre-line text-sm text-muted">

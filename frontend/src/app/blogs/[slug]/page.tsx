@@ -61,12 +61,12 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <div className="blog-body">{post.body}</div>
 
             {/* Like / dislike at the end of the post */}
-            <PostReactions slug={post.slug} />
+            <PostReactions postType="blog" postSlug={post.slug} />
           </article>
 
           {/* Right — comments */}
           <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto">
-            <CommentSection slug={post.slug} />
+            <CommentSection postType="blog" postSlug={post.slug} />
           </aside>
         </div>
       </div>

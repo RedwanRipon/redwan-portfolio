@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { Mail, MapPin, Phone, Clock, Send } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
+import { postContactMessage } from '@/lib/api';
 
 const ADDRESS = [
   { icon: MapPin, title: 'Location', value: 'Germany' },
@@ -11,16 +12,43 @@ const ADDRESS = [
   { icon: Clock, title: 'Working hours', value: 'Mon–Fri · 9:00–18:00 CET' },
 ];
 
-export function Contact() {
-  const [status, setStatus] = useState<'idle' | 'sent'>('idle');
+type Status = 'idle' | 'sending' | 'sent' | 'error';
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+export function Contact() {
+  const [status, setStatus] = useState<Status>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // TODO Phase 2: POST to /api/contact (or a Resend/Formspree endpoint).
-    setStatus('sent');
-    (e.currentTarget as HTMLFormElement).reset();
-    setTimeout(() => setStatus('idle'), 4000);
+    if (status === 'sending') return;
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    const payload = {
+      name: String(data.get('name') ?? '').trim(),
+      email: String(data.get('email') ?? '').trim(),
+      subject: String(data.get('subject') ?? '').trim(),
+      body: String(data.get('message') ?? '').trim(),
+    };
+    if (!payload.name || !payload.email || !payload.subject || !payload.body) {
+      return; // browser validation should already catch this
+    }
+
+    setStatus('sending');
+    setErrorMsg(null);
+    try {
+      await postContactMessage(payload);
+      form.reset();
+      setStatus('sent');
+      // Reset banner after a few seconds so the form is fully usable again.
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (err) {
+      setStatus('error');
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
+    }
   }
+
+  const disabled = status === 'sending';
 
   return (
     <section id="contact" className="section-padding bg-ink-deep">
@@ -43,14 +71,18 @@ export function Contact() {
                 type="text"
                 name="name"
                 placeholder="Name"
-                className="rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none"
+                disabled={disabled}
+                maxLength={80}
+                className="rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none disabled:opacity-60"
               />
               <input
                 required
                 type="email"
                 name="email"
                 placeholder="Email"
-                className="rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none"
+                disabled={disabled}
+                maxLength={200}
+                className="rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none disabled:opacity-60"
               />
             </div>
             <input
@@ -58,25 +90,33 @@ export function Contact() {
               type="text"
               name="subject"
               placeholder="Subject"
-              className="w-full rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none"
+              disabled={disabled}
+              maxLength={200}
+              className="w-full rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none disabled:opacity-60"
             />
             <textarea
               required
               rows={6}
               name="message"
               placeholder="Your message"
-              className="w-full resize-y rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none"
+              disabled={disabled}
+              maxLength={5000}
+              className="w-full resize-y rounded-md border border-white/10 bg-ink px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold focus:outline-none disabled:opacity-60"
             />
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted">
-                {status === 'sent' ? '✓ Sent — thanks! (stub)' : 'I respect your privacy.'}
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs text-muted" role={status === 'error' ? 'alert' : undefined}>
+                {status === 'sent' && '✓ Sent — thanks! I’ll reply soon.'}
+                {status === 'error' && `❌ ${errorMsg ?? 'Could not send. Try again.'}`}
+                {status === 'sending' && 'Sending…'}
+                {status === 'idle' && 'I respect your privacy.'}
               </p>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-ink transition hover:bg-gold-dark"
+                disabled={disabled}
+                className="inline-flex items-center gap-2 rounded-md bg-gold px-7 py-3 font-display text-sm font-semibold uppercase tracking-widest text-ink transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Send size={15} />
-                Send
+                {status === 'sending' ? 'Sending' : 'Send'}
               </button>
             </div>
           </form>
