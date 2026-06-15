@@ -73,8 +73,20 @@ async function http<T>(url: string, init: RequestInit = {}): Promise<T> {
   let detail = res.statusText;
   try {
     const j = await res.json();
-    if (j?.error) detail = String(j.error);
-    else if (j?.detail) detail = String(j.detail);
+    if (typeof j?.error === 'string') {
+      detail = j.error;
+    } else if (Array.isArray(j?.detail)) {
+      // FastAPI validation errors: each item has { loc, msg }.
+      detail = j.detail
+        .map((e: { loc?: unknown[]; msg?: string }) => {
+          const loc = Array.isArray(e?.loc) ? e.loc.slice(1).join('.') : '';
+          return loc ? `${loc}: ${e?.msg ?? ''}` : (e?.msg ?? '');
+        })
+        .filter(Boolean)
+        .join('; ');
+    } else if (typeof j?.detail === 'string') {
+      detail = j.detail;
+    }
   } catch {
     /* ignore */
   }

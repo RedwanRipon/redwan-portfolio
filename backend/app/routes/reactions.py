@@ -25,12 +25,20 @@ VoteValue = Literal["like", "dislike"]
 
 
 class ReactionCreate(BaseModel):
-    """Body of POST /reactions."""
+    """Body of POST /reactions — must include the chosen vote."""
 
     post_type: str = Field(..., max_length=20)
     post_slug: str = Field(..., min_length=1, max_length=120)
     voter_fingerprint: str = Field(..., min_length=8, max_length=64)
     vote: VoteValue
+
+
+class ReactionDelete(BaseModel):
+    """Body of DELETE /reactions — no `vote` because we're undoing."""
+
+    post_type: str = Field(..., max_length=20)
+    post_slug: str = Field(..., min_length=1, max_length=120)
+    voter_fingerprint: str = Field(..., min_length=8, max_length=64)
 
 
 class ReactionCounts(BaseModel):
@@ -146,7 +154,7 @@ def upsert_reaction(
 
 @router.delete("", response_model=ReactionCounts, status_code=200)
 def remove_reaction(
-    body: ReactionCreate,
+    body: ReactionDelete,
     request: Request,
     session: Session = Depends(get_session),
 ) -> ReactionCounts:
